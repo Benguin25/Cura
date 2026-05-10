@@ -1,12 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS, type StepIndex } from '../../types/onboarding';
+import { type AnsweredQuestion } from '../../lib/triage';
 import { useOnboarding } from './OnboardingContext';
 import { StepLayout } from './components/StepLayout';
-
-function titleCase(s: string): string {
-  return s.replace(/(^|\s)\S/g, (c) => c.toUpperCase());
-}
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
@@ -17,7 +14,7 @@ function formatDate(iso: string | null): string {
 
 interface SectionProps {
   title: string;
-  onEdit: () => void;
+  onEdit?: () => void;
   children: React.ReactNode;
 }
 
@@ -26,44 +23,57 @@ function Section({ title, onEdit, children }: SectionProps) {
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
-        <Pressable
-          onPress={onEdit}
-          hitSlop={8}
-          style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
-        >
-          <Text style={styles.editText}>Edit</Text>
-        </Pressable>
+        {onEdit ? (
+          <Pressable
+            onPress={onEdit}
+            hitSlop={8}
+            style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
+          >
+            <Text style={styles.editText}>Edit</Text>
+          </Pressable>
+        ) : null}
       </View>
       <View style={styles.sectionBody}>{children}</View>
     </View>
   );
 }
 
-interface RowProps {
-  label: string;
-  value: string;
-}
-
-function Row({ label, value }: RowProps) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue} numberOfLines={2}>
+      <Text style={styles.rowValue} numberOfLines={3}>
         {value || '—'}
       </Text>
     </View>
   );
 }
 
+function AnsweredList({ asked }: { asked: AnsweredQuestion[] }) {
+  if (asked.length === 0) {
+    return <Text style={styles.emptyText}>No questions answered yet.</Text>;
+  }
+  return (
+    <View>
+      {asked.map((a, idx) => (
+        <View key={`${a.questionId}-${idx}`} style={styles.qaRow}>
+          <Text style={styles.qaQuestion}>
+            {idx + 1}. {a.questionText}
+          </Text>
+          <Text style={styles.qaAnswer}>
+            {a.selected.map((s) => s.label).join(' · ')}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function Step4Review() {
   const { state, setStep, submitPatient } = useOnboarding();
-  const { personal, measurements, symptoms, submitting, submitError } = state;
+  const { personal, measurements, triage, submitting, submitError } = state;
 
   const goEdit = (step: StepIndex) => () => setStep(step);
-
-  const regionEntries = Object.entries(symptoms.regions) as Array<
-    [string, ReturnType<typeof Object.values>[number]]
-  >;
 
   const handleSubmit = () => {
     if (submitting) return;
@@ -74,7 +84,7 @@ export function Step4Review() {
     <StepLayout
       step={4}
       title="Review & submit"
-      subtitle="Make sure everything looks right before you check in."
+      subtitle="Confirm everything looks right before checking in."
       onBack={() => setStep(3)}
       onContinue={handleSubmit}
       continueLabel={submitting ? 'Submitting…' : 'Submit'}
@@ -88,7 +98,10 @@ export function Step4Review() {
       </Section>
 
       <Section title="Body measurements" onEdit={goEdit(2)}>
-        <Row label="Weight" value={measurements.weightLbs ? `${measurements.weightLbs} lbs` : ''} />
+        <Row
+          label="Weight"
+          value={measurements.weightLbs ? `${measurements.weightLbs} lbs` : ''}
+        />
         <Row
           label="Height"
           value={
@@ -99,27 +112,8 @@ export function Step4Review() {
         />
       </Section>
 
-      <Section title="Symptoms" onEdit={goEdit(3)}>
-        {regionEntries.length === 0 ? (
-          <Text style={styles.emptyText}>No body regions selected.</Text>
-        ) : (
-          <View style={styles.regionList}>
-            {regionEntries.map(([region, sensations]) => (
-              <View key={region} style={styles.regionRow}>
-                <Text style={styles.regionName}>{titleCase(region)}</Text>
-                <Text style={styles.regionSensations}>
-                  {(sensations as string[]).join(', ')}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-        {symptoms.description ? (
-          <View style={styles.descriptionWrap}>
-            <Text style={styles.rowLabel}>Description</Text>
-            <Text style={styles.descriptionText}>{symptoms.description}</Text>
-          </View>
-        ) : null}
+      <Section title="Symptom answers" onEdit={goEdit(3)}>
+        <AnsweredList asked={triage.asked} />
       </Section>
 
       {submitError ? (
@@ -153,32 +147,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  editBtn: {
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-  },
-  pressed: {
-    opacity: 0.6,
-  },
-  editText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  sectionBody: {
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-  },
-  row: {
-    flexDirection: 'row',
-    paddingVertical: 6,
-    gap: 12,
-  },
-  rowLabel: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    width: 110,
-  },
+  editBtn: { paddingHorizontal: 4, paddingVertical: 4 },
+  pressed: { opacity: 0.6 },
+  editText: { fontSize: 14, fontWeight: '600', color: COLORS.primary },
+  sectionBody: { paddingHorizontal: 16, paddingBottom: 14 },
+  row: { flexDirection: 'row', paddingVertical: 6, gap: 12 },
+  rowLabel: { fontSize: 14, color: COLORS.textSecondary, width: 110 },
   rowValue: {
     flex: 1,
     fontSize: 14,
@@ -191,33 +165,20 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     paddingVertical: 4,
   },
-  regionList: {
-    gap: 6,
+  qaRow: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-  regionRow: {
-    paddingVertical: 4,
-  },
-  regionName: {
+  qaQuestion: {
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.textPrimary,
+    marginBottom: 2,
   },
-  regionSensations: {
+  qaAnswer: {
     fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  descriptionWrap: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  descriptionText: {
-    fontSize: 14,
     color: COLORS.textPrimary,
-    marginTop: 4,
-    lineHeight: 20,
   },
   errorBanner: {
     backgroundColor: '#fef2f2',

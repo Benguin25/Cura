@@ -6,13 +6,13 @@ import React, {
   useReducer,
 } from 'react';
 import { insertPatient, type PatientInsert } from '../../../lib/supabase';
+import type { CategoryCode } from '../../data/questionBank';
+import type { AnsweredQuestion, TriageScore } from '../../lib/triage';
 import type {
-  BodyRegion,
   Measurements,
   OnboardingAction,
   OnboardingState,
   PersonalInfo,
-  Sensation,
   StepIndex,
 } from '../../types/onboarding';
 
@@ -30,9 +30,12 @@ const initialState: OnboardingState = {
     heightFeet: '',
     heightInches: '',
   },
-  symptoms: {
-    regions: {},
-    description: '',
+  triage: {
+    category: null,
+    asked: [],
+    selfSeverity: null,
+    score: null,
+    finished: false,
   },
   submitting: false,
   submitted: false,
@@ -46,40 +49,37 @@ function reducer(state: OnboardingState, action: OnboardingAction): OnboardingSt
     case 'SET_STEP':
       return { ...state, step: action.step };
     case 'UPDATE_PERSONAL':
-      return {
-        ...state,
-        personal: { ...state.personal, ...action.data },
-      };
+      return { ...state, personal: { ...state.personal, ...action.data } };
     case 'UPDATE_MEASUREMENTS':
       return {
         ...state,
         measurements: { ...state.measurements, ...action.data },
       };
-    case 'TOGGLE_REGION_SENSATIONS': {
-      const next = { ...state.symptoms.regions };
-      if (action.sensations.length === 0) {
-        delete next[action.region];
-      } else {
-        next[action.region] = action.sensations;
-      }
+    case 'TRIAGE_SET_CATEGORY':
       return {
         ...state,
-        symptoms: { ...state.symptoms, regions: next },
+        triage: { ...state.triage, category: action.category },
       };
-    }
-    case 'CLEAR_REGION': {
-      const next = { ...state.symptoms.regions };
-      delete next[action.region];
+    case 'TRIAGE_ADD_ANSWER':
       return {
         ...state,
-        symptoms: { ...state.symptoms, regions: next },
+        triage: {
+          ...state.triage,
+          asked: [...state.triage.asked, action.answer],
+        },
       };
-    }
-    case 'SET_SYMPTOM_DESCRIPTION':
+    case 'TRIAGE_SET_SEVERITY':
       return {
         ...state,
-        symptoms: { ...state.symptoms, description: action.description },
+        triage: { ...state.triage, selfSeverity: action.selfSeverity },
       };
+    case 'TRIAGE_FINISH':
+      return {
+        ...state,
+        triage: { ...state.triage, score: action.score, finished: true },
+      };
+    case 'TRIAGE_RESET':
+      return { ...state, triage: initialState.triage };
     case 'SET_ERRORS':
       return { ...state, errors: action.errors };
     case 'CLEAR_ERRORS':
@@ -104,10 +104,17 @@ function reducer(state: OnboardingState, action: OnboardingAction): OnboardingSt
 }
 
 function buildPatientInsert(state: OnboardingState): PatientInsert {
-  const { personal, measurements, symptoms } = state;
+  const { personal, measurements, triage } = state;
   const dob = personal.dateOfBirth
     ? new Date(personal.dateOfBirth).toISOString().slice(0, 10)
     : '';
+
+  const triagePayload = {
+    category: triage.category,
+    score: triage.score,
+    asked: triage.asked,
+  };
+
   return {
     first_name: personal.firstName.trim(),
     last_name: personal.lastName.trim(),
@@ -117,8 +124,8 @@ function buildPatientInsert(state: OnboardingState): PatientInsert {
     weight_lbs: Number(measurements.weightLbs),
     height_feet: Number(measurements.heightFeet),
     height_inches: Number(measurements.heightInches),
-    body_map: symptoms.regions as Record<string, string[]>,
-    symptoms_text: symptoms.description.trim() || null,
+    body_map: {},
+    symptoms_text: JSON.stringify(triagePayload),
   };
 }
 
@@ -127,9 +134,11 @@ interface OnboardingContextValue {
   setStep: (step: StepIndex) => void;
   updatePersonal: (data: Partial<PersonalInfo>) => void;
   updateMeasurements: (data: Partial<Measurements>) => void;
-  setRegionSensations: (region: BodyRegion, sensations: Sensation[]) => void;
-  clearRegion: (region: BodyRegion) => void;
-  setSymptomDescription: (description: string) => void;
+  setTriageCategory: (category: CategoryCode | null) => void;
+  addTriageAnswer: (answer: AnsweredQuestion) => void;
+  setSelfSeverity: (selfSeverity: number | null) => void;
+  finishTriage: (score: TriageScore) => void;
+  resetTriage: () => void;
   setErrors: (errors: OnboardingState['errors']) => void;
   clearErrors: () => void;
   submitPatient: () => Promise<void>;
@@ -153,19 +162,24 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     dispatch({ type: 'UPDATE_MEASUREMENTS', data });
   }, []);
 
-  const setRegionSensations = useCallback(
-    (region: BodyRegion, sensations: Sensation[]) => {
-      dispatch({ type: 'TOGGLE_REGION_SENSATIONS', region, sensations });
-    },
-    [],
-  );
-
-  const clearRegion = useCallback((region: BodyRegion) => {
-    dispatch({ type: 'CLEAR_REGION', region });
+  const setTriageCategory = useCallback((category: CategoryCode | null) => {
+    dispatch({ type: 'TRIAGE_SET_CATEGORY', category });
   }, []);
 
-  const setSymptomDescription = useCallback((description: string) => {
-    dispatch({ type: 'SET_SYMPTOM_DESCRIPTION', description });
+  const addTriageAnswer = useCallback((answer: AnsweredQuestion) => {
+    dispatch({ type: 'TRIAGE_ADD_ANSWER', answer });
+  }, []);
+
+  const setSelfSeverity = useCallback((selfSeverity: number | null) => {
+    dispatch({ type: 'TRIAGE_SET_SEVERITY', selfSeverity });
+  }, []);
+
+  const finishTriage = useCallback((score: TriageScore) => {
+    dispatch({ type: 'TRIAGE_FINISH', score });
+  }, []);
+
+  const resetTriage = useCallback(() => {
+    dispatch({ type: 'TRIAGE_RESET' });
   }, []);
 
   const setErrors = useCallback((errors: OnboardingState['errors']) => {
@@ -182,11 +196,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const submitPatient = useCallback(async () => {
     const payload = buildPatientInsert(state);
-    console.log('submitPatient', JSON.stringify(payload, null, 2));
     dispatch({ type: 'SUBMIT_START' });
     try {
       const row = await insertPatient(payload);
-      console.log('insertPatient ok', row.id);
       dispatch({ type: 'SUBMIT_SUCCESS', patientId: row.id });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Submission failed';
@@ -201,9 +213,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setStep,
       updatePersonal,
       updateMeasurements,
-      setRegionSensations,
-      clearRegion,
-      setSymptomDescription,
+      setTriageCategory,
+      addTriageAnswer,
+      setSelfSeverity,
+      finishTriage,
+      resetTriage,
       setErrors,
       clearErrors,
       submitPatient,
@@ -214,9 +228,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setStep,
       updatePersonal,
       updateMeasurements,
-      setRegionSensations,
-      clearRegion,
-      setSymptomDescription,
+      setTriageCategory,
+      addTriageAnswer,
+      setSelfSeverity,
+      finishTriage,
+      resetTriage,
       setErrors,
       clearErrors,
       submitPatient,
