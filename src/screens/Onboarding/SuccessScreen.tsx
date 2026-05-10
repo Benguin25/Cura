@@ -6,14 +6,43 @@ import { COLORS } from '../../types/onboarding';
 import { useQueue } from '../../hooks/useQueue';
 import { useEstimateWait } from '../../hooks/useEstimateWait';
 import { formatWait } from '../../lib/estimateWait';
+import { STATUS_COLORS, type TriageStatus } from '../../types/supabase';
 import { useOnboarding } from './OnboardingContext';
+
+const STATUS_COPY: Record<TriageStatus, { title: string; body: string }> = {
+  waiting: {
+    title: "You're checked in",
+    body: 'Please take a seat — a nurse will call your name shortly.',
+  },
+  'in-progress': {
+    title: "You're being seen",
+    body: 'A clinician is with you now.',
+  },
+  escalated: {
+    title: 'Your case has been escalated',
+    body: 'A senior clinician will see you immediately.',
+  },
+  discharged: {
+    title: "You've been discharged",
+    body: 'Thank you. You are free to leave.',
+  },
+};
 
 export function SuccessScreen() {
   const { state } = useOnboarding();
   const { data: queue } = useQueue();
   const estimateFor = useEstimateWait(queue);
 
-  const minutes = state.patientId ? estimateFor(state.patientId) : null;
+  const patientId = state.patientId;
+  const myEntry = patientId
+    ? queue.find((q) => q.patient.id === patientId)
+    : undefined;
+  const status: TriageStatus = myEntry?.triage.status ?? 'waiting';
+  const statusMeta = STATUS_COLORS[status];
+  const copy = STATUS_COPY[status];
+
+  const minutes = patientId ? estimateFor(patientId) : null;
+  const showWait = status === 'waiting';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -31,18 +60,25 @@ export function SuccessScreen() {
           </Svg>
         </View>
 
-        <Text style={styles.title}>You're checked in</Text>
+        <Text style={styles.title}>{copy.title}</Text>
 
-        <View style={styles.waitBlock}>
-          <Text style={styles.waitLabel}>Estimated wait</Text>
-          <Text style={styles.waitValue}>
-            {minutes === null ? '—' : formatWait(minutes)}
+        <View style={[styles.statusPill, { backgroundColor: statusMeta.bg }]}>
+          <View style={[styles.statusDot, { backgroundColor: statusMeta.fg }]} />
+          <Text style={[styles.statusText, { color: statusMeta.fg }]}>
+            {statusMeta.label}
           </Text>
         </View>
 
-        <Text style={styles.body}>
-          Please take a seat — a nurse will call your name shortly.
-        </Text>
+        {showWait && (
+          <View style={styles.waitBlock}>
+            <Text style={styles.waitLabel}>Estimated wait</Text>
+            <Text style={styles.waitValue}>
+              {minutes === null ? '—' : formatWait(minutes)}
+            </Text>
+          </View>
+        )}
+
+        <Text style={styles.body}>{copy.body}</Text>
       </View>
     </SafeAreaView>
   );
@@ -77,8 +113,27 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: 20,
+    marginBottom: 14,
     textAlign: 'center',
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+    gap: 8,
+    marginBottom: 24,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   waitBlock: {
     alignItems: 'center',
