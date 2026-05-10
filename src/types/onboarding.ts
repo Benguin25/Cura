@@ -16,6 +16,7 @@ export interface PersonalInfo {
   dateOfBirth: string | null;
   phone: string;
   email: string;
+  healthCardNumber: string;
 }
 
 export interface Measurements {

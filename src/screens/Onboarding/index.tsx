@@ -1,5 +1,6 @@
 import React from 'react';
 import { OnboardingProvider, useOnboarding } from './OnboardingContext';
+import { StepHealthCard } from './StepHealthCard';
 import { Step1PersonalInfo } from './Step1PersonalInfo';
 import { Step2Measurements } from './Step2Measurements';
 import { Step2bBodyMap as StepBodyMap } from './StepBodyMap';
@@ -13,6 +14,8 @@ function OnboardingFlow() {
   if (state.submitted) return <SuccessScreen />;
 
   switch (state.step) {
+    case 0:
+      return <StepHealthCard />;
     case 1:
       return <Step1PersonalInfo />;
     case 2:
@@ -24,7 +27,7 @@ function OnboardingFlow() {
     case 5:
       return <Step4Review />;
     default:
-      return <Step1PersonalInfo />;
+      return <StepHealthCard />;
   }
 }
 
