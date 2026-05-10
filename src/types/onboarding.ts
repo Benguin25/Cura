@@ -1,50 +1,10 @@
-export const BODY_REGIONS = [
-  'head',
-  'neck',
-  'chest',
-  'abdomen',
-  'upper back',
-  'lower back',
-  'left shoulder',
-  'right shoulder',
-  'left upper arm',
-  'right upper arm',
-  'left elbow',
-  'right elbow',
-  'left forearm',
-  'right forearm',
-  'left wrist',
-  'right wrist',
-  'left hand',
-  'right hand',
-  'left thigh',
-  'right thigh',
-  'left knee',
-  'right knee',
-  'left lower leg',
-  'right lower leg',
-  'left foot',
-  'right foot',
-] as const;
-
-export type BodyRegion = (typeof BODY_REGIONS)[number];
-
-export const SENSATIONS = [
-  'Pain',
-  'Pressure',
-  'Burning',
-  'Numbness',
-  'Tingling',
-  'Swelling',
-  'Tenderness',
-  'Stiffness',
-  'Weakness',
-  'Cramping',
-] as const;
-
-export type Sensation = (typeof SENSATIONS)[number];
-
-export type BodyView = 'front' | 'back';
+import type { CategoryCode } from '../data/questionBank';
+import type {
+  AnsweredQuestion,
+  Priority,
+  Tier,
+  TriageScore,
+} from '../lib/triage';
 
 export type StepIndex = 1 | 2 | 3 | 4;
 
@@ -64,18 +24,18 @@ export interface Measurements {
   heightInches: string;
 }
 
-export type RegionSensations = Partial<Record<BodyRegion, Sensation[]>>;
-
-export interface SymptomData {
-  regions: RegionSensations;
-  description: string;
+export interface TriageState {
+  category: CategoryCode | null;
+  asked: AnsweredQuestion[];
+  score: TriageScore | null;
+  finished: boolean;
 }
 
 export interface OnboardingState {
   step: StepIndex;
   personal: PersonalInfo;
   measurements: Measurements;
-  symptoms: SymptomData;
+  triage: TriageState;
   submitting: boolean;
   submitted: boolean;
   submitError: string | null;
@@ -87,9 +47,10 @@ export type OnboardingAction =
   | { type: 'SET_STEP'; step: StepIndex }
   | { type: 'UPDATE_PERSONAL'; data: Partial<PersonalInfo> }
   | { type: 'UPDATE_MEASUREMENTS'; data: Partial<Measurements> }
-  | { type: 'TOGGLE_REGION_SENSATIONS'; region: BodyRegion; sensations: Sensation[] }
-  | { type: 'CLEAR_REGION'; region: BodyRegion }
-  | { type: 'SET_SYMPTOM_DESCRIPTION'; description: string }
+  | { type: 'TRIAGE_SET_CATEGORY'; category: CategoryCode | null }
+  | { type: 'TRIAGE_ADD_ANSWER'; answer: AnsweredQuestion }
+  | { type: 'TRIAGE_FINISH'; score: TriageScore }
+  | { type: 'TRIAGE_RESET' }
   | {
       type: 'SET_ERRORS';
       errors: Partial<Record<keyof PersonalInfo | keyof Measurements, string>>;
@@ -108,4 +69,14 @@ export const COLORS = {
   textPrimary: '#0f172a',
   textSecondary: '#64748b',
   error: '#ef4444',
+  warning: '#f59e0b',
+  danger: '#dc2626',
 } as const;
+
+export const PRIORITY_TONE: Record<Priority, { bg: string; fg: string; border: string }> = {
+  HIGH: { bg: '#fee2e2', fg: '#991b1b', border: COLORS.danger },
+  LOW: { bg: '#fef3c7', fg: '#92400e', border: COLORS.warning },
+  DISMISSED: { bg: '#dcfce7', fg: '#166534', border: COLORS.primary },
+};
+
+export type { Priority, Tier, TriageScore, AnsweredQuestion };
