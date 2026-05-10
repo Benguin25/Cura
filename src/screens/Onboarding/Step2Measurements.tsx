@@ -31,35 +31,46 @@ export function Step2Measurements() {
   const [errors, setErrors] = useState<Partial<Record<keyof Measurements, string>>>({});
 
   // Get initial height in inches
-  const initialInches = (parseInt(m.heightFeet) || 5) * 12 + (parseInt(m.heightInches) || 6);
+  const initialInches =
+    (m.heightFeet !== '' ? parseInt(m.heightFeet) : 5) * 12 +
+    (m.heightInches !== '' ? parseInt(m.heightInches) : 6);
   const [heightInches, setHeightInches] = useState(initialInches);
 
   // Track height at gesture start
   const startHeightRef = useRef(initialInches);
 
-  const handleSliderMove = (event: any) => {
-    const { translationY, state: gestureState } = event.nativeEvent;
+  const handleGestureStateChange = (event: any) => {
+    const { state: gestureState } = event.nativeEvent;
 
     if (gestureState === State.BEGAN) {
       startHeightRef.current = heightInches;
-      return;
+    } else if (gestureState === State.END || gestureState === State.CANCELLED) {
+      // Only update context at the end to avoid jitter from heavy re-renders
+      const roundedHeight = Math.round(heightInches);
+      const feet = Math.floor(roundedHeight / 12);
+      const inches = roundedHeight % 12;
+
+      updateMeasurements({
+        heightFeet: feet.toString(),
+        heightInches: inches.toString(),
+      });
     }
+  };
+
+  const handleGestureEvent = (event: any) => {
+    const { translationY, state: gestureState } = event.nativeEvent;
 
     if (gestureState === State.ACTIVE) {
       // Direct 1:1 mapping of finger movement to height
       // negative translationY (dragging up) = height increases
       const pxPerInch = SLIDER_HEIGHT / (MAX_HEIGHT - MIN_HEIGHT);
       const heightChange = -(translationY / pxPerInch);
-      const newHeight = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, startHeightRef.current + heightChange));
-
-      const feet = Math.floor(newHeight / 12);
-      const inches = Math.round(newHeight % 12);
+      const newHeight = Math.max(
+        MIN_HEIGHT,
+        Math.min(MAX_HEIGHT, startHeightRef.current + heightChange),
+      );
 
       setHeightInches(newHeight);
-      updateMeasurements({
-        heightFeet: feet.toString(),
-        heightInches: inches.toString(),
-      });
     }
   };
 
@@ -69,9 +80,11 @@ export function Step2Measurements() {
     if (Object.keys(errs).length === 0) setStep(3);
   };
 
-  const feet = Math.floor(heightInches / 12);
-  const inches = Math.round(heightInches % 12);
-  const sliderPosition = ((heightInches - MIN_HEIGHT) / (MAX_HEIGHT - MIN_HEIGHT)) * SLIDER_HEIGHT;
+  const roundedTotalInches = Math.round(heightInches);
+  const displayFeet = Math.floor(roundedTotalInches / 12);
+  const displayInches = roundedTotalInches % 12;
+  const sliderPosition =
+    ((heightInches - MIN_HEIGHT) / (MAX_HEIGHT - MIN_HEIGHT)) * SLIDER_HEIGHT;
 
   return (
     <StepLayout
@@ -102,12 +115,15 @@ export function Step2Measurements() {
           {/* Height Display */}
           <View style={styles.display}>
             <Text style={styles.heightValue}>
-              {feet}'{inches}"
+              {displayFeet}'{displayInches}"
             </Text>
           </View>
 
           {/* Slider */}
-          <PanGestureHandler onGestureEvent={handleSliderMove}>
+          <PanGestureHandler
+            onGestureEvent={handleGestureEvent}
+            onHandlerStateChange={handleGestureStateChange}
+          >
             <View style={styles.sliderContainer}>
               <View style={styles.track} />
               <View style={[styles.thumb, { bottom: sliderPosition - 12 }]} />

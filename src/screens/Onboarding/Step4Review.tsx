@@ -71,7 +71,7 @@ function AnsweredList({ asked }: { asked: AnsweredQuestion[] }) {
 
 export function Step4Review() {
   const { state, setStep, submitPatient } = useOnboarding();
-  const { personal, measurements, triage, submitting, submitError } = state;
+  const { personal, measurements, triage, medicalHistory, submitting, submitError } = state;
 
   const goEdit = (step: StepIndex) => () => setStep(step);
 
@@ -82,10 +82,10 @@ export function Step4Review() {
 
   return (
     <StepLayout
-      step={5}
+      step={6}
       title="Review & submit"
       subtitle="Confirm everything looks right before checking in."
-      onBack={() => setStep(4)}
+      onBack={() => setStep(5)}
       onContinue={handleSubmit}
       continueLabel={submitting ? 'Submitting…' : 'Submit'}
       continueDisabled={submitting}
@@ -112,7 +112,11 @@ export function Step4Review() {
         />
       </Section>
 
-      <Section title="Symptom answers" onEdit={goEdit(4)}>
+      <Section title="Medical history" onEdit={goEdit(3)}>
+        <AnsweredList asked={medicalHistory} />
+      </Section>
+
+      <Section title="Symptom answers" onEdit={goEdit(5)}>
         <AnsweredList asked={triage.asked} />
       </Section>
 

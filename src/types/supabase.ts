@@ -24,7 +24,7 @@ export interface PatientRow {
   weight_lbs: number;
   height_feet: number;
   height_inches: number;
-  body_map: Record<string, string[]> | null;
+  body_map: string[] | null;
   symptoms_text: string | null;
   status?: string | null;
 }

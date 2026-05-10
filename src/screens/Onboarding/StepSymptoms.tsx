@@ -120,9 +120,9 @@ export function StepSymptoms() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuestion]);
 
-  // Auto-advance to step 5 once triage finishes (was step 4, shifted by body map)
+  // Auto-advance to step 6 once triage finishes
   useEffect(() => {
-    if (triage.finished) setStep(5);
+    if (triage.finished) setStep(6);
   }, [triage.finished, setStep]);
 
   const recordAnswer = (q: Question, picked: QuestionOption[]) => {
@@ -151,8 +151,9 @@ export function StepSymptoms() {
     }
 
     const newAsked = [...triage.asked, answer];
+    const combined = [...state.medicalHistory, ...newAsked];
 
-    if (shouldStopEarly(newAsked)) {
+    if (shouldStopEarly(combined)) {
       finalize(newAsked, nextSeverity);
       return;
     }
@@ -167,7 +168,8 @@ export function StepSymptoms() {
   };
 
   const finalize = (asked: AnsweredQuestion[], selfSeverity: number | null) => {
-    const score = computeScore(asked, selfSeverity);
+    const combined = [...state.medicalHistory, ...asked];
+    const score = computeScore(combined, selfSeverity);
     finishTriage(score);
     setCurrent(null);
   };
@@ -214,8 +216,8 @@ export function StepSymptoms() {
   const onBack = () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     if (triage.asked.length === 0) {
-      // Go back to body map (step 3), not measurements (step 2)
-      setStep(3);
+      // Go back to body map (step 4)
+      setStep(4);
       return;
     }
     resetTriage();
@@ -226,10 +228,10 @@ export function StepSymptoms() {
   if (!current) {
     return (
       <StepLayout
-        step={4}
+        step={5}
         title="Wrapping up…"
         subtitle="Compiling your answers."
-        onContinue={() => setStep(5)}
+        onContinue={() => setStep(6)}
         continueLabel="Continue"
       >
         <View />
@@ -245,7 +247,7 @@ export function StepSymptoms() {
 
   return (
     <StepLayout
-      step={4}
+      step={5}
       title={current.text}
       subtitle={`Question ${questionNumber} of up to ${MAX_QUESTIONS}${
         isMulti ? ' · pick all that apply' : ''

@@ -27,7 +27,7 @@ export interface PatientInsert {
   weight_lbs: number;
   height_feet: number;
   height_inches: number;
-  body_map: Record<string, string[]>;
+  body_map: string[];
   symptoms_text: string | null;
 }
 

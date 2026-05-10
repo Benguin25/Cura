@@ -33,9 +33,10 @@ const initialState: OnboardingState = {
   },
   measurements: {
     weightLbs: '',
-    heightFeet: '',
-    heightInches: '',
+    heightFeet: '5',
+    heightInches: '6',
   },
+  medicalHistory: [],
   // NEW: body map selections from the interactive body diagram
   bodyMap: [],
   triage: {
@@ -63,6 +64,8 @@ function reducer(state: OnboardingState, action: OnboardingAction): OnboardingSt
         ...state,
         measurements: { ...state.measurements, ...action.data },
       };
+    case 'UPDATE_MEDICAL_HISTORY':
+      return { ...state, medicalHistory: action.medicalHistory };
     // NEW: replace the entire bodyMap array with whatever the WebView sends back
     case 'UPDATE_BODY_MAP':
       return { ...state, bodyMap: action.bodyMap };
@@ -115,7 +118,7 @@ function reducer(state: OnboardingState, action: OnboardingAction): OnboardingSt
 }
 
 function buildPatientInsert(state: OnboardingState): PatientInsert {
-  const { personal, measurements, triage, bodyMap } = state;
+  const { personal, measurements, triage, bodyMap, medicalHistory } = state;
   const dob = personal.dateOfBirth
     ? new Date(personal.dateOfBirth).toISOString().slice(0, 10)
     : '';
@@ -123,7 +126,7 @@ function buildPatientInsert(state: OnboardingState): PatientInsert {
   const triagePayload = {
     category: triage.category,
     score: triage.score,
-    asked: triage.asked,
+    asked: [...medicalHistory, ...triage.asked],
   };
 
   return {
@@ -145,7 +148,7 @@ function buildTriageInsert(
   patientId: string,
   state: OnboardingState,
 ): TriageInsert {
-  const { triage } = state;
+  const { triage, medicalHistory } = state;
   const tier = triage.score?.tier ?? 5;
   const score01 = triage.score?.score ?? 0;
   const priorityScore = Math.max(0, Math.min(100, Math.round(score01 * 100)));
@@ -159,7 +162,9 @@ function buildTriageInsert(
   if (triage.selfSeverity !== null) {
     summaryParts.push(`Self-reported severity: ${triage.selfSeverity}/10.`);
   }
-  summaryParts.push(`${triage.asked.length} symptom answers on file.`);
+  summaryParts.push(
+    `${medicalHistory.length + triage.asked.length} clinical answers on file.`,
+  );
 
   return {
     patient_id: patientId,
@@ -176,6 +181,7 @@ interface OnboardingContextValue {
   setStep: (step: StepIndex) => void;
   updatePersonal: (data: Partial<PersonalInfo>) => void;
   updateMeasurements: (data: Partial<Measurements>) => void;
+  updateMedicalHistory: (medicalHistory: AnsweredQuestion[]) => void;
   // NEW
   updateBodyMap: (bodyMap: string[]) => void;
   setTriageCategory: (category: CategoryCode | null) => void;
@@ -204,6 +210,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const updateMeasurements = useCallback((data: Partial<Measurements>) => {
     dispatch({ type: 'UPDATE_MEASUREMENTS', data });
+  }, []);
+
+  const updateMedicalHistory = useCallback((medicalHistory: AnsweredQuestion[]) => {
+    dispatch({ type: 'UPDATE_MEDICAL_HISTORY', medicalHistory });
   }, []);
 
   // NEW
@@ -265,6 +275,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setStep,
       updatePersonal,
       updateMeasurements,
+      updateMedicalHistory,
       updateBodyMap,
       setTriageCategory,
       addTriageAnswer,
@@ -281,6 +292,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setStep,
       updatePersonal,
       updateMeasurements,
+      updateMedicalHistory,
       updateBodyMap,
       setTriageCategory,
       addTriageAnswer,

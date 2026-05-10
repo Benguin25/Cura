@@ -1316,6 +1316,39 @@ const GENERAL: Question[] = [
   },
 ];
 
+// ---------- MEDICAL HISTORY (STATIC STEP) ----------
+
+export const MEDICAL_HISTORY: Question[] = [
+  {
+    id: 'QHIST001',
+    text: 'Do you have a history of any of these conditions?',
+    type: 'multi',
+    options: [
+      { id: 'a', label: 'Severe Allergies / Anaphylaxis', weight: 8 },
+      { id: 'b', label: 'Asthma', weight: 6 },
+      { id: 'c', label: 'COPD / Emphysema', weight: 7 },
+      { id: 'd', label: 'Diabetes', weight: 5 },
+      { id: 'e', label: 'Heart Disease', weight: 7 },
+      { id: 'f', label: 'High Blood Pressure', weight: 4 },
+      { id: 'g', label: 'Immune System Condition', weight: 8 },
+      { id: 'h', label: 'None', weight: 1 },
+    ],
+  },
+  {
+    id: 'QHIST002',
+    text: 'Are you currently taking any of these medications?',
+    type: 'multi',
+    options: [
+      { id: 'a', label: 'Blood Thinners', weight: 8 },
+      { id: 'b', label: 'Insulin', weight: 7 },
+      { id: 'c', label: 'Inhalers', weight: 5 },
+      { id: 'd', label: 'EpiPen (prescribed)', weight: 7 },
+      { id: 'e', label: 'Steroids', weight: 6 },
+      { id: 'f', label: 'None', weight: 1 },
+    ],
+  },
+];
+
 // ---------- DISPATCH TABLE ----------
 
 export const SECTIONS: Record<CategoryCode, Question[]> = {

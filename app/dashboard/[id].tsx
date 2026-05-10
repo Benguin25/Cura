@@ -20,6 +20,7 @@ import {
   type ProbableCondition,
   type TriageStatus,
 } from '../../src/types/supabase';
+import { BodyMapSummary } from '../../src/components/BodyMapSummary';
 
 interface SymptomAnswer {
   questionId: string;
@@ -77,6 +78,27 @@ function findFirstAnswer(
 
 function answerLabel(a: SymptomAnswer): string {
   return a.selected.map((s) => s.label).join(' · ');
+}
+
+function extractAllergies(patient: PatientRow): string {
+  const parsed = parseSymptoms(patient.symptoms_text);
+  const allergyAnswer = parsed.asked.find(
+    (a) =>
+      a.questionId === 'QHIST001' ||
+      a.questionId === 'Q901' ||
+      /allergy|allergies/i.test(a.questionText),
+  );
+
+  if (!allergyAnswer) return 'None known';
+
+  if (allergyAnswer.questionId === 'QHIST001') {
+    const allergyOption = allergyAnswer.selected.find((s) =>
+      /allergy/i.test(s.label),
+    );
+    return allergyOption ? 'Known allergies' : 'None known';
+  }
+
+  return allergyAnswer.selected.map((s) => s.label).join(', ');
 }
 
 function probabilityColor(p: ConditionProbability): {
@@ -293,13 +315,18 @@ export default function PatientDetailScreen() {
                 )}
               </Card>
 
-              <Card title="Symptom answers">
-                <Row
-                  label="Duration"
-                  value={
-                    durationAnswer ? answerLabel(durationAnswer) : '—'
+              <Card title="Body map">
+                <BodyMapSummary
+                  selectedKeys={
+                    Array.isArray(patient.body_map)
+                      ? patient.body_map
+                      : []
                   }
+                  width={280}
                 />
+              </Card>
+
+              <Card title="Symptom answers">
                 <Row
                   label="Severity"
                   value={
@@ -322,24 +349,6 @@ export default function PatientDetailScreen() {
                         <Text style={styles.qaA}>{answerLabel(a)}</Text>
                       </View>
                     ))}
-                  </View>
-                ) : null}
-
-                {patient.body_map &&
-                Object.keys(patient.body_map).length > 0 ? (
-                  <View style={styles.qaList}>
-                    {Object.entries(patient.body_map).map(
-                      ([part, symptoms]) => (
-                        <View key={part} style={styles.qaRow}>
-                          <Text style={styles.qaQ}>{part}</Text>
-                          <Text style={styles.qaA}>
-                            {Array.isArray(symptoms)
-                              ? symptoms.join(', ')
-                              : '—'}
-                          </Text>
-                        </View>
-                      ),
-                    )}
                   </View>
                 ) : null}
               </Card>
@@ -464,16 +473,6 @@ function formatDob(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString();
-}
-
-function extractAllergies(p: PatientRow): string {
-  // Allergies aren't a top-level column on the current patients table — the
-  // onboarding flow doesn't capture them. Fall back to '—' so the row still
-  // renders cleanly.
-  const anyP = p as unknown as Record<string, unknown>;
-  const direct = anyP['allergies'];
-  if (typeof direct === 'string' && direct.trim().length > 0) return direct;
-  return '—';
 }
 
 const styles = StyleSheet.create({
