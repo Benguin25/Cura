@@ -1,5 +1,4 @@
-const MODEL = 'gemini-1.5-flash-8b';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+import Anthropic from '@anthropic-ai/sdk';
 
 const PROMPT = `This is an Ontario OHIP health card. Extract the following fields and return ONLY a JSON object with no other text:
 {
@@ -15,12 +14,6 @@ export interface HealthCardData {
   lastName: string;
   dateOfBirth: Date;
   healthCardNumber: string;
-}
-
-interface GeminiResponse {
-  candidates?: Array<{
-    content?: { parts?: Array<{ text?: string }> };
-  }>;
 }
 
 function extractJson(text: string): unknown {
@@ -41,60 +34,48 @@ function extractJson(text: string): unknown {
 export async function parseHealthCard(
   base64Image: string,
 ): Promise<HealthCardData | null> {
-  const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+  const apiKey = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
   if (!apiKey) {
-    console.warn('EXPO_PUBLIC_GEMINI_API_KEY not set');
+    console.warn('EXPO_PUBLIC_ANTHROPIC_API_KEY not set');
     return null;
   }
 
-  let res: Response;
+  const client = new Anthropic({ apiKey });
+
+  let response: Anthropic.Message;
   try {
-    res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: PROMPT },
-              {
-                inline_data: {
-                  mime_type: 'image/jpeg',
-                  data: base64Image,
-                },
+    response = await client.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 512,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: 'image/jpeg',
+                data: base64Image,
               },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0,
-          maxOutputTokens: 512,
-          responseMimeType: 'application/json',
+            },
+            {
+              type: 'text',
+              text: PROMPT,
+            },
+          ],
         },
-      }),
+      ],
     });
   } catch (err) {
-    console.error('parseHealthCard fetch failed', err);
+    console.error('parseHealthCard request failed', err);
     return null;
   }
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error(`parseHealthCard non-ok status=${res.status} body=${body}`);
-    return null;
-  }
+  const block = response.content.find((b): b is Anthropic.TextBlock => b.type === 'text');
+  if (!block) return null;
 
-  let json: GeminiResponse;
-  try {
-    json = await res.json();
-  } catch {
-    return null;
-  }
-
-  const text = json.candidates?.[0]?.content?.parts?.find((p) => p.text)?.text;
-  if (!text) return null;
-
-  const parsed = extractJson(text);
+  const parsed = extractJson(block.text);
   if (!parsed || typeof parsed !== 'object') return null;
 
   const obj = parsed as Record<string, unknown>;
