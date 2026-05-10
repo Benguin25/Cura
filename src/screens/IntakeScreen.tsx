@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -11,6 +11,25 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
+
+type FieldProps = {
+  label: string;
+  children: React.ReactNode;
+};
+
+function Field({ label, children }: FieldProps) {
+  return (
+    <View className="mb-4">
+      <Text className="text-sm font-semibold text-slate-700 mb-1.5">
+        {label}
+      </Text>
+      {children}
+    </View>
+  );
+}
+
+const inputClass =
+  'bg-white border border-slate-200 rounded-xl px-4 py-3 text-base text-slate-900';
 
 export default function IntakeScreen() {
   const [firstName, setFirstName] = useState('');
@@ -29,136 +48,144 @@ export default function IntakeScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.label}>First name</Text>
-      <TextInput
-        style={styles.input}
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-
-      <Text style={styles.label}>Last name</Text>
-      <TextInput
-        style={styles.input}
-        value={lastName}
-        onChangeText={setLastName}
-      />
-
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <Text style={styles.label}>Phone number</Text>
-      <TextInput
-        style={styles.input}
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
-
-      <Text style={styles.label}>Date of birth</Text>
-      <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-        <Text style={dob ? styles.dateValue : styles.datePlaceholder}>
-          {dob ? dob.toLocaleDateString() : 'Select date'}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        className="flex-1 bg-slate-50"
+        contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text className="text-2xl font-bold text-slate-900 mb-1">
+          Tell us about yourself
         </Text>
-      </Pressable>
-      {showPicker && (
-        <View>
-          <DateTimePicker
-            value={dob ?? new Date(2000, 0, 1)}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={onDateChange}
-            maximumDate={new Date()}
-          />
-          {Platform.OS === 'ios' && (
+        <Text className="text-sm text-slate-500 mb-6">
+          This helps the triage nurse assess you faster.
+        </Text>
+
+        <View className="bg-white rounded-2xl p-4 shadow-sm">
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <Field label="First name">
+                <TextInput
+                  className={inputClass}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Jane"
+                  placeholderTextColor="#94a3b8"
+                />
+              </Field>
+            </View>
+            <View className="flex-1">
+              <Field label="Last name">
+                <TextInput
+                  className={inputClass}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Doe"
+                  placeholderTextColor="#94a3b8"
+                />
+              </Field>
+            </View>
+          </View>
+
+          <Field label="Email">
+            <TextInput
+              className={inputClass}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="jane@example.com"
+              placeholderTextColor="#94a3b8"
+            />
+          </Field>
+
+          <Field label="Phone number">
+            <TextInput
+              className={inputClass}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              placeholder="(555) 555-5555"
+              placeholderTextColor="#94a3b8"
+            />
+          </Field>
+
+          <Field label="Date of birth">
             <Pressable
-              style={styles.doneButton}
-              onPress={() => setShowPicker(false)}
+              className={inputClass}
+              onPress={() => setShowPicker(true)}
             >
-              <Text style={styles.doneButtonText}>Done</Text>
+              <Text
+                className={dob ? 'text-slate-900 text-base' : 'text-slate-400 text-base'}
+              >
+                {dob ? dob.toLocaleDateString() : 'Select date'}
+              </Text>
             </Pressable>
-          )}
+            {showPicker && (
+              <View>
+                <DateTimePicker
+                  value={dob ?? new Date(2000, 0, 1)}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onDateChange}
+                  maximumDate={new Date()}
+                />
+                {Platform.OS === 'ios' && (
+                  <Pressable
+                    onPress={() => setShowPicker(false)}
+                    className="self-end px-3 py-2"
+                  >
+                    <Text className="text-brand font-semibold">Done</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </Field>
+
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <Field label="Weight">
+                <TextInput
+                  className={inputClass}
+                  value={weight}
+                  onChangeText={setWeight}
+                  keyboardType="numeric"
+                  placeholder="lbs or kg"
+                  placeholderTextColor="#94a3b8"
+                />
+              </Field>
+            </View>
+            <View className="flex-1">
+              <Field label="Height">
+                <TextInput
+                  className={inputClass}
+                  value={height}
+                  onChangeText={setHeight}
+                  keyboardType="numeric"
+                  placeholder="cm or ft/in"
+                  placeholderTextColor="#94a3b8"
+                />
+              </Field>
+            </View>
+          </View>
+
+          <Field label="Symptoms">
+            <TextInput
+              className={`${inputClass} min-h-32`}
+              value={symptoms}
+              onChangeText={setSymptoms}
+              multiline
+              numberOfLines={5}
+              textAlignVertical="top"
+              placeholder="Describe what you're feeling..."
+              placeholderTextColor="#94a3b8"
+            />
+          </Field>
         </View>
-      )}
-
-      <Text style={styles.label}>Weight</Text>
-      <TextInput
-        style={styles.input}
-        value={weight}
-        onChangeText={setWeight}
-        keyboardType="numeric"
-        placeholder="lbs or kg"
-      />
-
-      <Text style={styles.label}>Height</Text>
-      <TextInput
-        style={styles.input}
-        value={height}
-        onChangeText={setHeight}
-        keyboardType="numeric"
-        placeholder="cm or ft/in"
-      />
-
-      <Text style={styles.label}>Symptoms</Text>
-      <TextInput
-        style={[styles.input, styles.multiline]}
-        value={symptoms}
-        onChangeText={setSymptoms}
-        multiline
-        numberOfLines={5}
-        textAlignVertical="top"
-        placeholder="Describe what you're feeling..."
-      />
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    paddingBottom: 48,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 12,
-    marginBottom: 4,
-    color: '#222',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
-    backgroundColor: '#fff',
-    fontSize: 16,
-    minHeight: 42,
-    justifyContent: 'center',
-  },
-  multiline: {
-    minHeight: 100,
-  },
-  datePlaceholder: {
-    color: '#888',
-    fontSize: 16,
-  },
-  dateValue: {
-    color: '#222',
-    fontSize: 16,
-  },
-  doneButton: {
-    alignSelf: 'flex-end',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  doneButtonText: {
-    color: '#0a7d4f',
-    fontWeight: '600',
-  },
-});

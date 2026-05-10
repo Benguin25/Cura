@@ -1,3 +1,5 @@
+import './global.css';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -10,12 +12,21 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   return (
     <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator initialRouteName="Home">
+      <StatusBar style="dark" />
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          headerStyle: { backgroundColor: '#ffffff' },
+          headerTitleStyle: { fontWeight: '700' },
+          headerTintColor: '#dc2626',
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: '#f8fafc' },
+        }}
+      >
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: 'FirstAid' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Intake"
