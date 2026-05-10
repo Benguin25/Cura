@@ -1,6 +1,7 @@
 # Cura
 
 https://firstaid-theta.vercel.app/dashboard
+
 https://firstaid-theta.vercel.app/
 
 ## What is this?
