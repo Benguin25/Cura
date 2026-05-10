@@ -9,22 +9,54 @@ import { formatWait } from '../../lib/estimateWait';
 import { STATUS_COLORS, type TriageStatus } from '../../types/supabase';
 import { useOnboarding } from './OnboardingContext';
 
-const STATUS_COPY: Record<TriageStatus, { title: string; body: string }> = {
+interface StatusIcon {
+  color: string;
+  path: string;
+  strokeWidth: number;
+}
+
+const STATUS_COPY: Record<
+  TriageStatus,
+  { title: string; body: string; icon: StatusIcon }
+> = {
   waiting: {
     title: "You're checked in",
     body: 'Please take a seat — a nurse will call your name shortly.',
+    icon: {
+      color: COLORS.primary,
+      path: 'M5 12.5l4.5 4.5L19 7',
+      strokeWidth: 3,
+    },
   },
   'in-progress': {
     title: "You're being seen",
     body: 'A clinician is with you now.',
+    icon: {
+      color: '#1d4ed8',
+      // Right-pointing arrow ("you've been called in")
+      path: 'M5 12h14M13 6l6 6-6 6',
+      strokeWidth: 3,
+    },
   },
   escalated: {
     title: 'Your case has been escalated',
     body: 'A senior clinician will see you immediately.',
+    icon: {
+      color: '#D97706',
+      // Exclamation mark
+      path: 'M12 4v10M12 18.5v1.5',
+      strokeWidth: 3.5,
+    },
   },
   discharged: {
     title: "You've been discharged",
     body: 'Thank you. You are free to leave.',
+    icon: {
+      color: '#DC2626',
+      // X
+      path: 'M6 6l12 12M18 6L6 18',
+      strokeWidth: 3,
+    },
   },
 };
 
@@ -47,12 +79,17 @@ export function SuccessScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <View style={styles.checkCircle}>
+        <View
+          style={[
+            styles.checkCircle,
+            { backgroundColor: copy.icon.color, shadowColor: copy.icon.color },
+          ]}
+        >
           <Svg width={56} height={56} viewBox="0 0 24 24">
             <Path
-              d="M5 12.5l4.5 4.5L19 7"
+              d={copy.icon.path}
               stroke="#ffffff"
-              strokeWidth={3}
+              strokeWidth={copy.icon.strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
