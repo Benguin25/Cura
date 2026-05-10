@@ -1,5 +1,8 @@
 # Cura
 
+https://firstaid-theta.vercel.app/dashboard
+https://firstaid-theta.vercel.app/
+
 ## What is this?
 
 firstAId is a mobile-first triage intake system designed to reduce wait times in hospitals and pharmacies. Patients check in through the app, answer a structured symptom questionnaire, and are automatically assigned a priority level. Staff see a live dashboard sorted by severity so the most critical patients are always seen first.
