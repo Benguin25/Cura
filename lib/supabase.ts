@@ -27,7 +27,8 @@ export interface PatientInsert {
   weight_lbs: number;
   height_feet: number;
   height_inches: number;
-  body_map: Record<string, string[]>;
+  chief_complaint: string;
+  pain_level: number;
   symptoms_text: string | null;
 }
 
@@ -47,3 +48,4 @@ export async function insertPatient(data: PatientInsert): Promise<PatientRow> {
   if (error) throw error;
   return row as PatientRow;
 }
+

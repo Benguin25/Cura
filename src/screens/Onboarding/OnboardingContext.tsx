@@ -124,7 +124,8 @@ function buildPatientInsert(state: OnboardingState): PatientInsert {
     weight_lbs: Number(measurements.weightLbs),
     height_feet: Number(measurements.heightFeet),
     height_inches: Number(measurements.heightInches),
-    body_map: {},
+    chief_complaint: triage.category ?? 'GENERAL',
+    pain_level: triage.selfSeverity ?? 1,
     symptoms_text: JSON.stringify(triagePayload),
   };
 }
