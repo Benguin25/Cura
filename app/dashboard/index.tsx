@@ -12,6 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { dynamicPriority, useQueue } from '../../src/hooks/useQueue';
 import {
+  estimateWaitMinutes,
+  formatWait as formatEstWait,
+} from '../../src/lib/estimateWait';
+import {
   CTAS_COLORS,
   DASHBOARD_COLORS as C,
   STATUS_COLORS,
@@ -167,11 +171,13 @@ function QueueRow({
   rank,
   onPress,
   searchQuery,
+  patientsAhead,
 }: {
   item: PatientWithTriage;
   rank: number;
   onPress: () => void;
   searchQuery: string;
+  patientsAhead: { ctasLevel: number }[];
 }) {
   const { patient, triage } = item;
   const ctasColor = CTAS_COLORS[triage.ctas_level];
@@ -186,6 +192,11 @@ function QueueRow({
   const waitMins = minutesSince(patient.created_at);
   const waitOver60 = waitMins > 60;
   const waitOver90 = waitMins > 90;
+  const estWaitMins = estimateWaitMinutes(
+    triage.ctas_level,
+    rank,
+    patientsAhead,
+  );
   const accent = RANK_ACCENT[rank];
 
   // Highlight matched text in name when searching
@@ -254,6 +265,10 @@ function QueueRow({
         </Text>
       </View>
 
+      <View style={styles.colEstWait}>
+        <Text style={styles.estWaitText}>{formatEstWait(estWaitMins)}</Text>
+      </View>
+
       <View style={styles.colStatus}>
         <View style={[styles.statusPill, { backgroundColor: statusMeta.bg }]}>
           <Text style={[styles.statusText, { color: statusMeta.fg }]}>
@@ -276,6 +291,7 @@ function HeaderRow() {
       <Text style={[styles.headerCell, styles.colCtas]}>CTAS</Text>
       <Text style={[styles.headerCell, styles.colPriority]}>Priority</Text>
       <Text style={[styles.headerCell, styles.colWaiting]}>Waiting</Text>
+      <Text style={[styles.headerCell, styles.colEstWait]}>Est. Wait</Text>
       <Text style={[styles.headerCell, styles.colStatus]}>Status</Text>
     </View>
   );
@@ -433,6 +449,9 @@ export default function DashboardScreen() {
                     item={item}
                     rank={idx}
                     searchQuery={searchQuery}
+                    patientsAhead={filtered
+                      .slice(0, idx)
+                      .map((q) => ({ ctasLevel: q.triage.ctas_level }))}
                     onPress={() =>
                       router.push({
                         pathname: '/dashboard/[id]',
@@ -615,6 +634,7 @@ const styles = StyleSheet.create({
   colCtas: { width: 70, alignItems: 'flex-start' },
   colPriority: { width: 100 },
   colWaiting: { width: 100 },
+  colEstWait: { width: 100 },
   colStatus: { width: 120, alignItems: 'flex-start' },
   rankText: {
     fontSize: 22,
@@ -664,6 +684,12 @@ const styles = StyleSheet.create({
   },
   waitText: {
     fontSize: 14,
+    color: C.textPrimary,
+    fontVariant: ['tabular-nums'],
+  },
+  estWaitText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: C.textPrimary,
     fontVariant: ['tabular-nums'],
   },
