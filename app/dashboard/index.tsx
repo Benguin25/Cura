@@ -11,10 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { dynamicPriority, useQueue } from '../../src/hooks/useQueue';
-import {
-  estimateWaitMinutes,
-  formatWait as formatEstWait,
-} from '../../src/lib/estimateWait';
+import { useEstimateWait } from '../../src/hooks/useEstimateWait';
+import { formatWait as formatEstWait } from '../../src/lib/estimateWait';
 import {
   CTAS_COLORS,
   DASHBOARD_COLORS as C,
@@ -171,13 +169,13 @@ function QueueRow({
   rank,
   onPress,
   searchQuery,
-  patientsAhead,
+  estimatedWaitMins,
 }: {
   item: PatientWithTriage;
   rank: number;
   onPress: () => void;
   searchQuery: string;
-  patientsAhead: { ctasLevel: number }[];
+  estimatedWaitMins: number | null;
 }) {
   const { patient, triage } = item;
   const ctasColor = CTAS_COLORS[triage.ctas_level];
@@ -192,11 +190,6 @@ function QueueRow({
   const waitMins = minutesSince(patient.created_at);
   const waitOver60 = waitMins > 60;
   const waitOver90 = waitMins > 90;
-  const estWaitMins = estimateWaitMinutes(
-    triage.ctas_level,
-    rank,
-    patientsAhead,
-  );
   const accent = RANK_ACCENT[rank];
 
   // Highlight matched text in name when searching
@@ -266,7 +259,9 @@ function QueueRow({
       </View>
 
       <View style={styles.colEstWait}>
-        <Text style={styles.estWaitText}>{formatEstWait(estWaitMins)}</Text>
+        <Text style={styles.estWaitText}>
+          {estimatedWaitMins === null ? '—' : formatEstWait(estimatedWaitMins)}
+        </Text>
       </View>
 
       <View style={styles.colStatus}>
@@ -302,6 +297,7 @@ function HeaderRow() {
 export default function DashboardScreen() {
   const router = useRouter();
   const { data, loading, error, refetch } = useQueue();
+  const estimateFor = useEstimateWait(data);
   const [filter, setFilter] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [now, setNow] = useState<Date>(new Date());
@@ -449,9 +445,7 @@ export default function DashboardScreen() {
                     item={item}
                     rank={idx}
                     searchQuery={searchQuery}
-                    patientsAhead={filtered
-                      .slice(0, idx)
-                      .map((q) => ({ ctasLevel: q.triage.ctas_level }))}
+                    estimatedWaitMins={estimateFor(item.patient.id)}
                     onPress={() =>
                       router.push({
                         pathname: '/dashboard/[id]',

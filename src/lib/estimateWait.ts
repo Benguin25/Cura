@@ -1,5 +1,7 @@
-// Base wait times in minutes per CTAS level
-const BASE_WAIT: Record<number, number> = {
+export type BaseWaits = Record<number, number>;
+
+// Used only when the database has no historical samples for a CTAS level yet.
+export const FALLBACK_BASE_WAIT: BaseWaits = {
   1: 0,
   2: 15,
   3: 30,
@@ -10,13 +12,13 @@ const BASE_WAIT: Record<number, number> = {
 export function estimateWaitMinutes(
   patientCtasLevel: number,
   queuePosition: number,
-  patientsAhead: { ctasLevel: number }[]
+  patientsAhead: { ctasLevel: number }[],
+  baseWaits: BaseWaits,
 ): number {
-  // Sum the base wait of every patient ahead in queue
   const waitFromQueue = patientsAhead.reduce((total, p) => {
-    return total + (BASE_WAIT[p.ctasLevel] ?? 60) * 0.3;
+    return total + (baseWaits[p.ctasLevel] ?? 60) * 0.3;
   }, 0);
-  return Math.round((BASE_WAIT[patientCtasLevel] ?? 60) + waitFromQueue);
+  return Math.round((baseWaits[patientCtasLevel] ?? 60) + waitFromQueue);
 }
 
 export function formatWait(minutes: number): string {

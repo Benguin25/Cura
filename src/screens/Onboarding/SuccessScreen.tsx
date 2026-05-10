@@ -1,37 +1,19 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { COLORS } from '../../types/onboarding';
 import { useQueue } from '../../hooks/useQueue';
-import { estimateWaitMinutes, formatWait } from '../../lib/estimateWait';
+import { useEstimateWait } from '../../hooks/useEstimateWait';
+import { formatWait } from '../../lib/estimateWait';
 import { useOnboarding } from './OnboardingContext';
 
 export function SuccessScreen() {
   const { state } = useOnboarding();
   const { data: queue } = useQueue();
+  const estimateFor = useEstimateWait(queue);
 
-  const patientCtas = state.triage.score?.tier ?? 5;
-  const patientId = state.patientId;
-
-  const waitMinutes = useMemo(() => {
-    const idx = patientId
-      ? queue.findIndex((q) => q.patient.id === patientId)
-      : -1;
-
-    const ahead =
-      idx > 0
-        ? queue
-            .slice(0, idx)
-            .filter((q) => q.triage.status === 'waiting')
-            .map((q) => ({ ctasLevel: q.triage.ctas_level }))
-        : queue
-            .filter((q) => q.triage.status === 'waiting')
-            .map((q) => ({ ctasLevel: q.triage.ctas_level }));
-
-    const position = idx >= 0 ? idx : ahead.length;
-    return estimateWaitMinutes(patientCtas, position, ahead);
-  }, [queue, patientId, patientCtas]);
+  const minutes = state.patientId ? estimateFor(state.patientId) : null;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -53,7 +35,9 @@ export function SuccessScreen() {
 
         <View style={styles.waitBlock}>
           <Text style={styles.waitLabel}>Estimated wait</Text>
-          <Text style={styles.waitValue}>{formatWait(waitMinutes)}</Text>
+          <Text style={styles.waitValue}>
+            {minutes === null ? '—' : formatWait(minutes)}
+          </Text>
         </View>
 
         <Text style={styles.body}>
