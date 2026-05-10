@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -19,17 +20,12 @@ type FieldProps = {
 
 function Field({ label, children }: FieldProps) {
   return (
-    <View className="mb-4">
-      <Text className="text-sm font-semibold text-slate-700 mb-1.5">
-        {label}
-      </Text>
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
       {children}
     </View>
   );
 }
-
-const inputClass =
-  'bg-white border border-slate-200 rounded-xl px-4 py-3 text-base text-slate-900';
 
 export default function IntakeScreen() {
   const [firstName, setFirstName] = useState('');
@@ -53,23 +49,21 @@ export default function IntakeScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        className="flex-1 bg-slate-50"
-        contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-2xl font-bold text-slate-900 mb-1">
-          Tell us about yourself
-        </Text>
-        <Text className="text-sm text-slate-500 mb-6">
+        <Text style={styles.title}>Tell us about yourself</Text>
+        <Text style={styles.subtitle}>
           This helps the triage nurse assess you faster.
         </Text>
 
-        <View className="bg-white rounded-2xl p-4 shadow-sm">
-          <View className="flex-row gap-3">
-            <View className="flex-1">
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={styles.col}>
               <Field label="First name">
                 <TextInput
-                  className={inputClass}
+                  style={styles.input}
                   value={firstName}
                   onChangeText={setFirstName}
                   placeholder="Jane"
@@ -77,10 +71,10 @@ export default function IntakeScreen() {
                 />
               </Field>
             </View>
-            <View className="flex-1">
+            <View style={styles.col}>
               <Field label="Last name">
                 <TextInput
-                  className={inputClass}
+                  style={styles.input}
                   value={lastName}
                   onChangeText={setLastName}
                   placeholder="Doe"
@@ -92,7 +86,7 @@ export default function IntakeScreen() {
 
           <Field label="Email">
             <TextInput
-              className={inputClass}
+              style={styles.input}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -104,7 +98,7 @@ export default function IntakeScreen() {
 
           <Field label="Phone number">
             <TextInput
-              className={inputClass}
+              style={styles.input}
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -114,13 +108,8 @@ export default function IntakeScreen() {
           </Field>
 
           <Field label="Date of birth">
-            <Pressable
-              className={inputClass}
-              onPress={() => setShowPicker(true)}
-            >
-              <Text
-                className={dob ? 'text-slate-900 text-base' : 'text-slate-400 text-base'}
-              >
+            <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
+              <Text style={dob ? styles.dateValue : styles.datePlaceholder}>
                 {dob ? dob.toLocaleDateString() : 'Select date'}
               </Text>
             </Pressable>
@@ -134,22 +123,19 @@ export default function IntakeScreen() {
                   maximumDate={new Date()}
                 />
                 {Platform.OS === 'ios' && (
-                  <Pressable
-                    onPress={() => setShowPicker(false)}
-                    className="self-end px-3 py-2"
-                  >
-                    <Text className="text-brand font-semibold">Done</Text>
+                  <Pressable onPress={() => setShowPicker(false)} style={styles.doneBtn}>
+                    <Text style={styles.doneBtnText}>Done</Text>
                   </Pressable>
                 )}
               </View>
             )}
           </Field>
 
-          <View className="flex-row gap-3">
-            <View className="flex-1">
+          <View style={styles.row}>
+            <View style={styles.col}>
               <Field label="Weight">
                 <TextInput
-                  className={inputClass}
+                  style={styles.input}
                   value={weight}
                   onChangeText={setWeight}
                   keyboardType="numeric"
@@ -158,10 +144,10 @@ export default function IntakeScreen() {
                 />
               </Field>
             </View>
-            <View className="flex-1">
+            <View style={styles.col}>
               <Field label="Height">
                 <TextInput
-                  className={inputClass}
+                  style={styles.input}
                   value={height}
                   onChangeText={setHeight}
                   keyboardType="numeric"
@@ -174,7 +160,7 @@ export default function IntakeScreen() {
 
           <Field label="Symptoms">
             <TextInput
-              className={`${inputClass} min-h-32`}
+              style={[styles.input, styles.multiline]}
               value={symptoms}
               onChangeText={setSymptoms}
               multiline
@@ -189,3 +175,78 @@ export default function IntakeScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 60,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 24,
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  col: {
+    flex: 1,
+  },
+  field: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0f172a',
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#0f172a',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  multiline: {
+    minHeight: 128,
+  },
+  dateValue: {
+    color: '#0f172a',
+    fontSize: 16,
+  },
+  datePlaceholder: {
+    color: '#94a3b8',
+    fontSize: 16,
+  },
+  doneBtn: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  doneBtnText: {
+    color: '#1D9E75',
+    fontWeight: '600',
+  },
+});

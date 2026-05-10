@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -46,13 +46,11 @@ type SectionProps = {
 
 function Section({ title, onEdit, children }: SectionProps) {
   return (
-    <View className="bg-white border border-slate-200 rounded-2xl p-4 mb-3">
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-          {title}
-        </Text>
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
         <Pressable onPress={onEdit} hitSlop={8}>
-          <Text className="text-sm text-[#1D9E75] font-semibold">Edit</Text>
+          <Text style={styles.editLink}>Edit</Text>
         </Pressable>
       </View>
       {children}
@@ -84,46 +82,27 @@ function SuccessView() {
   }, [opacity, scale]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white items-center justify-center px-6">
-      <Animated.View
-        style={{
-          transform: [{ scale }],
-          width: 96,
-          height: 96,
-          borderRadius: 48,
-          backgroundColor: '#1D9E75',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 24,
-        }}
-      >
-        <Text style={{ color: '#fff', fontSize: 52, fontWeight: '800', lineHeight: 56 }}>
-          ✓
-        </Text>
+    <SafeAreaView style={styles.successSafe}>
+      <Animated.View style={[styles.successCircle, { transform: [{ scale }] }]}>
+        <Text style={styles.successCheck}>✓</Text>
       </Animated.View>
-      <Animated.View style={{ opacity, alignItems: 'center' }}>
-        <Text className="text-2xl font-bold text-slate-900">
-          You're checked in
-        </Text>
-        <Text className="text-base text-slate-500 mt-2 text-center">
+      <Animated.View style={{ opacity, alignItems: 'center', width: '100%' }}>
+        <Text style={styles.successTitle}>You&apos;re checked in</Text>
+        <Text style={styles.successBody}>
           A nurse will review your information shortly.
         </Text>
-        <View className="mt-8 bg-slate-50 rounded-2xl p-5 w-full">
-          <Text className="text-xs uppercase font-semibold text-slate-500 tracking-wide">
-            Estimated wait time
-          </Text>
-          <Text className="text-3xl font-bold text-slate-900 mt-1">
-            ~ 35 min
-          </Text>
+        <View style={styles.waitCard}>
+          <Text style={styles.waitLabel}>Estimated wait time</Text>
+          <Text style={styles.waitValue}>~ 35 min</Text>
         </View>
         <Pressable
           onPress={() => {
             reset();
             navigation.popToTop();
           }}
-          className="mt-8 px-6 py-3"
+          style={styles.backHomeBtn}
         >
-          <Text className="text-[#1D9E75] font-semibold">Back to home</Text>
+          <Text style={styles.backHomeText}>Back to home</Text>
         </Pressable>
       </Animated.View>
     </SafeAreaView>
@@ -150,37 +129,26 @@ export default function Step6Review() {
 
   return (
     <StepLayout onContinue={handleSubmit} continueLabel="Submit check-in">
-      <Text className="text-2xl font-bold text-slate-900 mt-2 mb-1">
-        Review and submit
-      </Text>
-      <Text className="text-sm text-slate-500 mb-5">
-        Make sure everything looks right.
-      </Text>
+      <Text style={styles.title}>Review and submit</Text>
+      <Text style={styles.subtitle}>Make sure everything looks right.</Text>
 
       <Section title="Patient" onEdit={() => setStep(0)}>
-        <Text className="text-base text-slate-900 font-semibold">
+        <Text style={styles.patientName}>
           {data.firstName} {data.lastName}
         </Text>
-        <Text className="text-sm text-slate-600 mt-1">
-          DOB: {formatDOB(data.dob)}
-        </Text>
-        <Text className="text-sm text-slate-600">{data.phone}</Text>
-        <Text className="text-sm text-slate-600">{data.email}</Text>
+        <Text style={styles.detailFirst}>DOB: {formatDOB(data.dob)}</Text>
+        <Text style={styles.detail}>{data.phone}</Text>
+        <Text style={styles.detail}>{data.email}</Text>
       </Section>
 
       <Section title="Pain locations" onEdit={() => setStep(1)}>
         {data.bodyRegions.length === 0 ? (
-          <Text className="text-sm text-slate-400">None selected</Text>
+          <Text style={styles.muted}>None selected</Text>
         ) : (
-          <View className="flex-row flex-wrap gap-2">
+          <View style={styles.chipRow}>
             {data.bodyRegions.map((r) => (
-              <View
-                key={r}
-                className="bg-[#1D9E75]/10 border border-[#1D9E75] rounded-full px-3 py-1"
-              >
-                <Text className="text-[#1D9E75] text-sm font-medium">
-                  {REGION_LABEL[r]}
-                </Text>
+              <View key={r} style={styles.chip}>
+                <Text style={styles.chipText}>{REGION_LABEL[r]}</Text>
               </View>
             ))}
           </View>
@@ -189,20 +157,15 @@ export default function Step6Review() {
 
       <Section title="What you're feeling" onEdit={() => setStep(2)}>
         {data.chiefComplaint.description ? (
-          <Text className="text-sm text-slate-700 leading-5">
-            {data.chiefComplaint.description}
-          </Text>
+          <Text style={styles.body}>{data.chiefComplaint.description}</Text>
         ) : (
-          <Text className="text-sm text-slate-400">No description</Text>
+          <Text style={styles.muted}>No description</Text>
         )}
         {data.chiefComplaint.symptoms.length > 0 && (
-          <View className="flex-row flex-wrap gap-2 mt-3">
+          <View style={[styles.chipRow, { marginTop: 12 }]}>
             {data.chiefComplaint.symptoms.map((s) => (
-              <View
-                key={s}
-                className="bg-slate-100 rounded-full px-3 py-1"
-              >
-                <Text className="text-slate-700 text-sm">{s}</Text>
+              <View key={s} style={styles.chipNeutral}>
+                <Text style={styles.chipNeutralText}>{s}</Text>
               </View>
             ))}
           </View>
@@ -210,37 +173,211 @@ export default function Step6Review() {
       </Section>
 
       <Section title="Onset & pattern" onEdit={() => setStep(3)}>
-        <View className="flex-row justify-between">
-          <Text className="text-sm text-slate-500">Started</Text>
-          <Text className="text-sm text-slate-900 font-medium">
-            {onsetLabel}
-          </Text>
+        <View style={styles.kvRow}>
+          <Text style={styles.kvKey}>Started</Text>
+          <Text style={styles.kvValue}>{onsetLabel}</Text>
         </View>
-        <View className="flex-row justify-between mt-1.5">
-          <Text className="text-sm text-slate-500">Pattern</Text>
-          <Text className="text-sm text-slate-900 font-medium">
-            {patternLabel}
-          </Text>
+        <View style={[styles.kvRow, { marginTop: 6 }]}>
+          <Text style={styles.kvKey}>Pattern</Text>
+          <Text style={styles.kvValue}>{patternLabel}</Text>
         </View>
       </Section>
 
       <Section title="Pain level" onEdit={() => setStep(4)}>
-        <View className="flex-row items-center justify-between">
-          <Text className="text-3xl font-bold text-slate-900">
+        <View style={styles.painRow}>
+          <Text style={styles.painNumber}>
             {data.painLevel ?? '—'}
-            <Text className="text-base font-normal text-slate-400"> / 10</Text>
+            <Text style={styles.painSlash}> / 10</Text>
           </Text>
-          <Text className="text-sm text-slate-600">
-            {labelFor(data.painLevel)}
-          </Text>
+          <Text style={styles.detail}>{labelFor(data.painLevel)}</Text>
         </View>
       </Section>
 
       <Section title="Allergies" onEdit={() => setStep(4)}>
-        <Text className="text-sm text-slate-700">
-          {data.allergies.trim() || 'None reported'}
-        </Text>
+        <Text style={styles.body}>{data.allergies.trim() || 'None reported'}</Text>
       </Section>
     </StepLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 20,
+  },
+  section: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  editLink: {
+    fontSize: 14,
+    color: '#1D9E75',
+    fontWeight: '600',
+  },
+  patientName: {
+    fontSize: 16,
+    color: '#0f172a',
+    fontWeight: '600',
+  },
+  detailFirst: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 4,
+  },
+  detail: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  body: {
+    fontSize: 14,
+    color: '#0f172a',
+    lineHeight: 20,
+  },
+  muted: {
+    fontSize: 14,
+    color: '#94a3b8',
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#1D9E75',
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  chipText: {
+    color: '#1D9E75',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  chipNeutral: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  chipNeutralText: {
+    color: '#0f172a',
+    fontSize: 14,
+  },
+  kvRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  kvKey: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  kvValue: {
+    fontSize: 14,
+    color: '#0f172a',
+    fontWeight: '500',
+  },
+  painRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  painNumber: {
+    fontSize: 30,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  painSlash: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#94a3b8',
+  },
+  successSafe: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  successCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#1D9E75',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  successCheck: {
+    color: '#ffffff',
+    fontSize: 52,
+    fontWeight: '800',
+    lineHeight: 56,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  successBody: {
+    fontSize: 16,
+    color: '#64748b',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  waitCard: {
+    marginTop: 32,
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+  },
+  waitLabel: {
+    fontSize: 12,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    color: '#64748b',
+    letterSpacing: 0.5,
+  },
+  waitValue: {
+    fontSize: 30,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginTop: 4,
+  },
+  backHomeBtn: {
+    marginTop: 32,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  backHomeText: {
+    color: '#1D9E75',
+    fontWeight: '600',
+  },
+});

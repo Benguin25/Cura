@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
 import { validateHealthCard } from '../../lib/hcv/client';
 import { useIntakeStore } from '../../store/intakeStore';
 import { HCVStatusBadge } from './HCVStatusBadge';
@@ -70,82 +77,173 @@ export function HealthCardStep() {
     advanceStep();
   }
 
+  const validateBtnActive = isReadyToValidate && !isLoading;
+
   return (
-    <ScrollView className="flex-1" contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
-      <Text className="text-2xl font-bold text-gray-900 mb-2">Health Card</Text>
-      <Text className="text-base text-gray-500 mb-8">
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Health Card</Text>
+      <Text style={styles.subtitle}>
         Enter your Ontario Health Card (OHIP) number to begin.
       </Text>
 
       {hcvStatus === 'offline' && (
-        <View className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <Text className="text-amber-800 text-sm font-medium">Validation unavailable</Text>
-          <Text className="text-amber-700 text-sm mt-1">
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineTitle}>Validation unavailable</Text>
+          <Text style={styles.offlineBody}>
             You may proceed with manual entry. Ensure details match your physical card.
           </Text>
         </View>
       )}
 
-      <View className="mb-5">
-        <Text className="text-sm font-medium text-gray-700 mb-1.5">
-          Health Card Number <Text className="text-red-500">*</Text>
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>
+          Health Card Number <Text style={styles.required}>*</Text>
         </Text>
         <TextInput
-          className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+          style={styles.input}
           value={displayCard}
           onChangeText={handleCardInput}
           placeholder="#### ### ###"
           keyboardType="numeric"
           maxLength={12}
           editable={!isLoading}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#94a3b8"
         />
-        <Text className="text-xs text-gray-400 mt-1.5">10-digit number on your green OHIP card</Text>
+        <Text style={styles.helper}>10-digit number on your green OHIP card</Text>
       </View>
 
-      <View className="mb-6">
-        <Text className="text-sm font-medium text-gray-700 mb-1.5">
+      <View style={styles.fieldGroupLg}>
+        <Text style={styles.label}>
           Version Code{' '}
-          <Text className="text-xs text-gray-400 font-normal">(optional for older cards)</Text>
+          <Text style={styles.helperInline}>(optional for older cards)</Text>
         </Text>
         <TextInput
-          className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
-          style={{ width: 96 }}
+          style={[styles.input, { width: 96 }]}
           value={versionCode}
           onChangeText={handleVersionCode}
           placeholder="AB"
           maxLength={2}
           autoCapitalize="characters"
           editable={!isLoading}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#94a3b8"
         />
       </View>
 
-      <View className="mb-6">
+      <View style={styles.fieldGroupLg}>
         <HCVStatusBadge status={hcvStatus} responseCode={hcvResponse?.responseCode} />
       </View>
 
       <TouchableOpacity
-        className={`py-4 rounded-xl items-center mb-3 ${
-          isReadyToValidate && !isLoading ? 'bg-blue-600' : 'bg-gray-200'
-        }`}
+        style={[styles.button, validateBtnActive ? styles.buttonPrimary : styles.buttonDisabled]}
         onPress={handleValidate}
         disabled={!isReadyToValidate || isLoading}
       >
-        <Text
-          className={`text-base font-semibold ${
-            isReadyToValidate && !isLoading ? 'text-white' : 'text-gray-400'
-          }`}
-        >
+        <Text style={validateBtnActive ? styles.buttonTextPrimary : styles.buttonTextDisabled}>
           {isLoading ? 'Validating…' : 'Validate Card'}
         </Text>
       </TouchableOpacity>
 
       {canProceed && (
-        <TouchableOpacity className="py-4 rounded-xl items-center bg-blue-600" onPress={handleProceed}>
-          <Text className="text-white text-base font-semibold">Continue →</Text>
+        <TouchableOpacity style={[styles.button, styles.buttonPrimary]} onPress={handleProceed}>
+          <Text style={styles.buttonTextPrimary}>Continue →</Text>
         </TouchableOpacity>
       )}
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 48,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#64748b',
+    marginBottom: 32,
+  },
+  offlineBanner: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 12,
+  },
+  offlineTitle: {
+    color: '#92400e',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  offlineBody: {
+    color: '#b45309',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  fieldGroup: {
+    marginBottom: 20,
+  },
+  fieldGroupLg: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#0f172a',
+    marginBottom: 6,
+  },
+  required: {
+    color: '#dc2626',
+  },
+  helperInline: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '400',
+  },
+  helper: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 6,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#0f172a',
+    backgroundColor: '#ffffff',
+  },
+  button: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  buttonPrimary: {
+    backgroundColor: '#1D9E75',
+  },
+  buttonDisabled: {
+    backgroundColor: '#e2e8f0',
+  },
+  buttonTextPrimary: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonTextDisabled: {
+    color: '#94a3b8',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

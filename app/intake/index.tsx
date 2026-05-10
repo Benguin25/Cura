@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIntakeStore } from '../../store/intakeStore';
 import { StepIndicator } from '../../components/intake/StepIndicator';
@@ -10,30 +10,72 @@ export default function IntakePage() {
   const { currentStep, resetIntake } = useIntakeStore();
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      <View className="flex-row items-center justify-between px-4 pt-2 pb-1">
-        <Text className="text-lg font-bold text-blue-700">FirstAid Intake</Text>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.headerRow}>
+        <Text style={styles.brand}>FirstAid Intake</Text>
         {currentStep !== 'health-card' && (
           <TouchableOpacity onPress={resetIntake}>
-            <Text className="text-sm text-gray-400">Start over</Text>
+            <Text style={styles.startOver}>Start over</Text>
           </TouchableOpacity>
         )}
       </View>
 
       <StepIndicator currentStep={currentStep} />
 
-      <View className="flex-1">
+      <View style={styles.body}>
         {currentStep === 'health-card' && <HealthCardStep />}
         {currentStep === 'demographics' && <DemographicsForm />}
         {currentStep === 'symptoms' && (
-          <View className="flex-1 items-center justify-center px-8">
-            <Text className="text-2xl font-bold text-gray-900 mb-3">Symptoms</Text>
-            <Text className="text-base text-gray-500 text-center">
-              Step 3 — coming soon.
-            </Text>
+          <View style={styles.placeholderWrap}>
+            <Text style={styles.placeholderTitle}>Symptoms</Text>
+            <Text style={styles.placeholderBody}>Step 3 — coming soon.</Text>
           </View>
         )}
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  brand: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1D9E75',
+  },
+  startOver: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  body: {
+    flex: 1,
+  },
+  placeholderWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  placeholderTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 12,
+  },
+  placeholderBody: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+});

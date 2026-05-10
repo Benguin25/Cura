@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -39,14 +40,10 @@ export function StepLayout({
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      <View className="flex-row items-center px-2 pt-1">
-        <Pressable
-          onPress={handleBack}
-          hitSlop={12}
-          className="w-10 h-10 items-center justify-center"
-        >
-          <Text className="text-3xl text-slate-700 leading-none">‹</Text>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.headerRow}>
+        <Pressable onPress={handleBack} hitSlop={12} style={styles.backBtn}>
+          <Text style={styles.backIcon}>‹</Text>
         </Pressable>
       </View>
       <ProgressBar current={step} total={TOTAL_STEPS} />
@@ -56,24 +53,25 @@ export function StepLayout({
       >
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           {children}
         </ScrollView>
         {!hideContinue && (
-          <View className="px-5 pb-6 pt-3 border-t border-slate-100 bg-white">
+          <View style={styles.footer}>
             <Pressable
               onPress={onContinue}
               disabled={continueDisabled}
-              className={`rounded-2xl py-4 items-center ${
-                continueDisabled ? 'bg-slate-200' : 'bg-[#1D9E75]'
-              }`}
+              style={[
+                styles.continueBtn,
+                continueDisabled ? styles.continueBtnDisabled : styles.continueBtnActive,
+              ]}
             >
               <Text
-                className={`text-base font-semibold ${
-                  continueDisabled ? 'text-slate-400' : 'text-white'
-                }`}
+                style={
+                  continueDisabled ? styles.continueTextDisabled : styles.continueTextActive
+                }
               >
                 {continueLabel}
               </Text>
@@ -84,3 +82,60 @@ export function StepLayout({
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingTop: 4,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    fontSize: 30,
+    color: '#0f172a',
+    lineHeight: 30,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+  },
+  continueBtn: {
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  continueBtnActive: {
+    backgroundColor: '#1D9E75',
+  },
+  continueBtnDisabled: {
+    backgroundColor: '#e2e8f0',
+  },
+  continueTextActive: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  continueTextDisabled: {
+    color: '#94a3b8',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
