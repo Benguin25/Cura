@@ -98,7 +98,7 @@ Derived from who's ahead in the queue, weighted by their CTAS level — not a fl
 ## Project structure
 
 ```
-firstaid/
+cura/
 ├── app/                       # Expo Router screens
 │   ├── onboarding/            # Health card scan + intake
 │   └── dashboard/             # Staff queue + patient detail
@@ -126,12 +126,12 @@ firstaid/
 ## Getting started
 
 ```bash
-cd firstaid
+cd cura
 npm install
 npx expo start          # press w for web, scan QR for device
 ```
 
-Required env vars in `firstaid/.env`:
+Required env vars in `cura/.env`:
 
 ```
 EXPO_PUBLIC_SUPABASE_URL=...
