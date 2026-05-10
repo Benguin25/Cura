@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type {
+  CtasLevel,
   PatientRow,
   PatientWithTriage,
   TriageRow,
@@ -11,6 +12,40 @@ interface UseQueueResult {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+}
+
+const WAIT_WEIGHTS: Record<number, number> = {
+  1: 0,
+  2: 0.3,
+  3: 0.6,
+  4: 1.0,
+  5: 1.2,
+};
+
+export function dynamicPriority(
+  priorityScore: number,
+  ctasLevel: number,
+  createdAt: string,
+): number {
+  const minutesWaiting = (Date.now() - new Date(createdAt).getTime()) / 60000;
+  const weight = WAIT_WEIGHTS[ctasLevel] ?? 0.5;
+  return Math.round(priorityScore + minutesWaiting * weight);
+}
+
+function sortByDynamic(rows: PatientWithTriage[]): PatientWithTriage[] {
+  return [...rows].sort((a, b) => {
+    const da = dynamicPriority(
+      a.triage.priority_score,
+      a.triage.ctas_level as CtasLevel,
+      a.patient.created_at,
+    );
+    const db = dynamicPriority(
+      b.triage.priority_score,
+      b.triage.ctas_level as CtasLevel,
+      b.patient.created_at,
+    );
+    return db - da;
+  });
 }
 
 export function useQueue(): UseQueueResult {
@@ -45,10 +80,12 @@ export function useQueue(): UseQueueResult {
 
       const joined: PatientWithTriage[] = triageRows
         .filter((t) => patientMap.has(t.patient_id))
-        .map((t) => ({ patient: patientMap.get(t.patient_id) as PatientRow, triage: t }))
-        .sort((a, b) => b.triage.priority_score - a.triage.priority_score);
+        .map((t) => ({
+          patient: patientMap.get(t.patient_id) as PatientRow,
+          triage: t,
+        }));
 
-      setData(joined);
+      setData(sortByDynamic(joined));
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load queue');
@@ -82,6 +119,15 @@ export function useQueue(): UseQueueResult {
       void supabase.removeChannel(channel);
     };
   }, [fetchData]);
+
+  // Re-sort by dynamic priority every 60s so wait time keeps shifting rank
+  // even when no realtime event arrives.
+  useEffect(() => {
+    const tick = setInterval(() => {
+      setData((prev) => sortByDynamic(prev));
+    }, 60000);
+    return () => clearInterval(tick);
+  }, []);
 
   return { data, loading, error, refetch: fetchData };
 }

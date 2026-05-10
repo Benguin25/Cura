@@ -200,18 +200,20 @@ export default function PatientDetailScreen() {
   if (error || !data) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-        <View style={styles.headerBar}>
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={12}
-            style={styles.backBtn}
-          >
-            <Text style={styles.backArrow}>←</Text>
-          </Pressable>
-        </View>
-        <View style={styles.center}>
-          <Text style={styles.errorTitle}>Couldn't load patient</Text>
-          <Text style={styles.errorBody}>{error ?? 'Not found'}</Text>
+        <View style={styles.container}>
+          <View style={styles.headerBar}>
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={12}
+              style={styles.backBtn}
+            >
+              <Text style={styles.backArrow}>←</Text>
+            </Pressable>
+          </View>
+          <View style={styles.center}>
+            <Text style={styles.errorTitle}>Couldn't load patient</Text>
+            <Text style={styles.errorBody}>{error ?? 'Not found'}</Text>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -244,170 +246,215 @@ export default function PatientDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <View style={styles.headerBar}>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          style={styles.backBtn}
-        >
-          <Text style={styles.backArrow}>←</Text>
-        </Pressable>
-        <Text style={styles.headerName} numberOfLines={1}>
-          {fullName}
-        </Text>
-        <View style={[styles.ctasBadge, { backgroundColor: ctasColor }]}>
-          <Text style={styles.ctasBadgeText}>CTAS {triage.ctas_level}</Text>
-        </View>
-      </View>
-
-      <View style={styles.subHeader}>
-        <View style={[styles.statusPill, { backgroundColor: statusMeta.bg }]}>
-          <Text style={[styles.statusText, { color: statusMeta.fg }]}>
-            {statusMeta.label}
+      <View style={styles.container}>
+        <View style={styles.headerBar}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={12}
+            style={styles.backBtn}
+          >
+            <Text style={styles.backArrow}>←</Text>
+          </Pressable>
+          <Text style={styles.headerName} numberOfLines={1}>
+            {fullName}
           </Text>
+          <View style={[styles.ctasBadge, { backgroundColor: ctasColor }]}>
+            <Text style={styles.ctasBadgeText}>CTAS {triage.ctas_level}</Text>
+          </View>
         </View>
-      </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Card title="Triage result">
-          <View style={styles.tierRow}>
-            <View style={[styles.tierDot, { backgroundColor: ctasColor }]} />
-            <Text style={styles.tierText}>
-              Level {triage.ctas_level} — {ctasLabel}
+        <View style={styles.subHeader}>
+          <View style={[styles.statusPill, { backgroundColor: statusMeta.bg }]}>
+            <Text style={[styles.statusText, { color: statusMeta.fg }]}>
+              {statusMeta.label}
             </Text>
           </View>
-          <Text style={styles.scoreLine}>
-            Priority score:{' '}
-            <Text style={styles.scoreNumber}>{triage.priority_score}</Text>
-            <Text style={styles.scoreOutOf}> / 100</Text>
-          </Text>
-          {triage.nurse_summary ? (
-            <Text style={styles.summary}>{triage.nurse_summary}</Text>
-          ) : null}
-          {conditions.length > 0 ? (
-            <View style={styles.conditionsList}>
-              {conditions.map((c, i) => {
-                const colors = probabilityColor(c.probability);
-                return (
-                  <View key={`${c.condition}-${i}`} style={styles.conditionRow}>
-                    <Text style={styles.conditionName}>{c.condition}</Text>
-                    <View
-                      style={[styles.probBadge, { backgroundColor: colors.bg }]}
-                    >
-                      <Text style={[styles.probText, { color: colors.fg }]}>
-                        {c.probability}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          ) : null}
-        </Card>
+        </View>
 
-        <Card title="Patient info">
-          <Row label="Date of birth" value={formatDob(patient.date_of_birth)} />
-          <Row label="Age" value={age !== null ? `${age} yrs` : '—'} />
-          <Row label="Phone" value={patient.phone} />
-          <Row label="Email" value={patient.email} />
-          <Row
-            label="Weight"
-            value={patient.weight_lbs ? `${patient.weight_lbs} lbs` : '—'}
-          />
-          <Row
-            label="Height"
-            value={
-              patient.height_feet || patient.height_inches
-                ? `${patient.height_feet || 0}' ${patient.height_inches || 0}"`
-                : '—'
-            }
-          />
-          <Row label="Allergies" value={extractAllergies(patient)} />
-        </Card>
-
-        <Card title="Symptom answers">
-          <Row
-            label="Duration"
-            value={durationAnswer ? answerLabel(durationAnswer) : '—'}
-          />
-          <Row
-            label="Severity"
-            value={
-              severityAnswer
-                ? answerLabel(severityAnswer)
-                : parsed.selfSeverity !== null
-                ? `${parsed.selfSeverity} / 10`
-                : '—'
-            }
-          />
-
-          {otherAnswers.length > 0 ? (
-            <View style={styles.qaList}>
-              {otherAnswers.map((a, idx) => (
-                <View key={`${a.questionId}-${idx}`} style={styles.qaRow}>
-                  <Text style={styles.qaQ}>{a.questionText}</Text>
-                  <Text style={styles.qaA}>{answerLabel(a)}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-
-          {patient.body_map &&
-          Object.keys(patient.body_map).length > 0 ? (
-            <View style={styles.qaList}>
-              {Object.entries(patient.body_map).map(([part, symptoms]) => (
-                <View key={part} style={styles.qaRow}>
-                  <Text style={styles.qaQ}>{part}</Text>
-                  <Text style={styles.qaA}>
-                    {Array.isArray(symptoms) ? symptoms.join(', ') : '—'}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.twoCol}>
+            <View style={styles.colLeft}>
+              <Card title="Clinical notes">
+                <View style={styles.tierRow}>
+                  <View
+                    style={[styles.tierDot, { backgroundColor: ctasColor }]}
+                  />
+                  <Text style={styles.tierText}>
+                    Level {triage.ctas_level} — {ctasLabel}
                   </Text>
                 </View>
-              ))}
-            </View>
-          ) : null}
-        </Card>
+                {triage.nurse_summary ? (
+                  <Text style={styles.summary}>{triage.nurse_summary}</Text>
+                ) : (
+                  <Text style={styles.muted}>No nurse summary recorded.</Text>
+                )}
+              </Card>
 
-        <Card title="Status update">
-          <View style={styles.actionsCol}>
-            <StatusButton
-              label="Call in patient"
-              activeBg="#1d4ed8"
-              activeFg="#ffffff"
-              active={triage.status === 'in-progress'}
-              loading={busyAction === 'in-progress'}
-              disabled={triage.status === 'in-progress'}
-              onPress={() => {
-                void handleUpdate('in-progress');
-              }}
-            />
-            <StatusButton
-              label="Escalate"
-              activeBg="#dc2626"
-              activeFg="#ffffff"
-              active={triage.status === 'escalated'}
-              loading={busyAction === 'escalated'}
-              disabled={false}
-              onPress={() => {
-                void handleUpdate('escalated');
-              }}
-            />
-            <StatusButton
-              label="Discharge"
-              activeBg="#16a34a"
-              activeFg="#ffffff"
-              active={triage.status === 'discharged'}
-              loading={busyAction === 'discharged'}
-              disabled={triage.status === 'discharged'}
-              onPress={() => {
-                void handleUpdate('discharged');
-              }}
-            />
+              <Card title="Symptom answers">
+                <Row
+                  label="Duration"
+                  value={
+                    durationAnswer ? answerLabel(durationAnswer) : '—'
+                  }
+                />
+                <Row
+                  label="Severity"
+                  value={
+                    severityAnswer
+                      ? answerLabel(severityAnswer)
+                      : parsed.selfSeverity !== null
+                        ? `${parsed.selfSeverity} / 10`
+                        : '—'
+                  }
+                />
+
+                {otherAnswers.length > 0 ? (
+                  <View style={styles.qaList}>
+                    {otherAnswers.map((a, idx) => (
+                      <View
+                        key={`${a.questionId}-${idx}`}
+                        style={styles.qaRow}
+                      >
+                        <Text style={styles.qaQ}>{a.questionText}</Text>
+                        <Text style={styles.qaA}>{answerLabel(a)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {patient.body_map &&
+                Object.keys(patient.body_map).length > 0 ? (
+                  <View style={styles.qaList}>
+                    {Object.entries(patient.body_map).map(
+                      ([part, symptoms]) => (
+                        <View key={part} style={styles.qaRow}>
+                          <Text style={styles.qaQ}>{part}</Text>
+                          <Text style={styles.qaA}>
+                            {Array.isArray(symptoms)
+                              ? symptoms.join(', ')
+                              : '—'}
+                          </Text>
+                        </View>
+                      ),
+                    )}
+                  </View>
+                ) : null}
+              </Card>
+            </View>
+
+            <View style={styles.colRight}>
+              <Card title="Patient info">
+                <Row
+                  label="Date of birth"
+                  value={formatDob(patient.date_of_birth)}
+                />
+                <Row label="Age" value={age !== null ? `${age} yrs` : '—'} />
+                <Row label="Phone" value={patient.phone} />
+                <Row label="Email" value={patient.email} />
+                <Row
+                  label="Weight"
+                  value={
+                    patient.weight_lbs ? `${patient.weight_lbs} lbs` : '—'
+                  }
+                />
+                <Row
+                  label="Height"
+                  value={
+                    patient.height_feet || patient.height_inches
+                      ? `${patient.height_feet || 0}' ${patient.height_inches || 0}"`
+                      : '—'
+                  }
+                />
+                <Row label="Allergies" value={extractAllergies(patient)} />
+                <View style={styles.scoreBlock}>
+                  <Text style={styles.scoreLine}>
+                    Priority score:{' '}
+                    <Text style={styles.scoreNumber}>
+                      {triage.priority_score}
+                    </Text>
+                    <Text style={styles.scoreOutOf}> / 100</Text>
+                  </Text>
+                </View>
+              </Card>
+
+              <Card title="Status update">
+                <View style={styles.actionsCol}>
+                  <StatusButton
+                    label="Call in patient"
+                    activeBg="#1d4ed8"
+                    activeFg="#ffffff"
+                    active={triage.status === 'in-progress'}
+                    loading={busyAction === 'in-progress'}
+                    disabled={triage.status === 'in-progress'}
+                    onPress={() => {
+                      void handleUpdate('in-progress');
+                    }}
+                  />
+                  <StatusButton
+                    label="Escalate"
+                    activeBg="#dc2626"
+                    activeFg="#ffffff"
+                    active={triage.status === 'escalated'}
+                    loading={busyAction === 'escalated'}
+                    disabled={false}
+                    onPress={() => {
+                      void handleUpdate('escalated');
+                    }}
+                  />
+                  <StatusButton
+                    label="Discharge"
+                    activeBg="#16a34a"
+                    activeFg="#ffffff"
+                    active={triage.status === 'discharged'}
+                    loading={busyAction === 'discharged'}
+                    disabled={triage.status === 'discharged'}
+                    onPress={() => {
+                      void handleUpdate('discharged');
+                    }}
+                  />
+                </View>
+              </Card>
+
+              <Card title="Probable conditions">
+                {conditions.length === 0 ? (
+                  <Text style={styles.muted}>No conditions identified.</Text>
+                ) : (
+                  <View style={styles.conditionsList}>
+                    {conditions.map((c, i) => {
+                      const colors = probabilityColor(c.probability);
+                      return (
+                        <View
+                          key={`${c.condition}-${i}`}
+                          style={styles.conditionRow}
+                        >
+                          <Text style={styles.conditionName}>
+                            {c.condition}
+                          </Text>
+                          <View
+                            style={[
+                              styles.probBadge,
+                              { backgroundColor: colors.bg },
+                            ]}
+                          >
+                            <Text
+                              style={[styles.probText, { color: colors.fg }]}
+                            >
+                              {c.probability}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </Card>
+            </View>
           </View>
-        </Card>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -431,11 +478,17 @@ function extractAllergies(p: PatientRow): string {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.background },
+  container: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+  },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 4,
     gap: 12,
   },
@@ -449,7 +502,7 @@ const styles = StyleSheet.create({
   },
   headerName: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: C.textPrimary,
   },
@@ -461,11 +514,10 @@ const styles = StyleSheet.create({
   ctasBadgeText: {
     color: '#ffffff',
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 14,
   },
   subHeader: {
-    paddingHorizontal: 20,
-    paddingBottom: 8,
+    paddingBottom: 10,
     flexDirection: 'row',
   },
   statusPill: {
@@ -473,10 +525,23 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
   },
-  statusText: { fontSize: 12, fontWeight: '700' },
+  statusText: { fontSize: 14, fontWeight: '700' },
   scrollContent: {
-    paddingHorizontal: 20,
     paddingBottom: 32,
+  },
+  twoCol: {
+    flexDirection: 'row',
+    gap: 16,
+    alignItems: 'flex-start',
+  },
+  colLeft: {
+    flexBasis: 0,
+    flexGrow: 6,
+    gap: 14,
+  },
+  colRight: {
+    flexBasis: 0,
+    flexGrow: 4,
     gap: 14,
   },
   card: {
@@ -484,7 +549,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: C.border,
-    padding: 14,
+    padding: 16,
   },
   cardTitle: {
     fontSize: 15,
@@ -497,7 +562,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   tierDot: {
     width: 10,
@@ -509,10 +574,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: C.textPrimary,
   },
+  scoreBlock: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+  },
   scoreLine: {
-    fontSize: 13,
+    fontSize: 14,
     color: C.textSecondary,
-    marginBottom: 4,
   },
   scoreNumber: {
     fontSize: 16,
@@ -520,17 +590,21 @@ const styles = StyleSheet.create({
     color: C.textPrimary,
   },
   scoreOutOf: {
-    fontSize: 13,
+    fontSize: 14,
     color: C.textSecondary,
   },
   summary: {
     fontSize: 14,
     color: C.textPrimary,
-    lineHeight: 20,
+    lineHeight: 21,
     marginTop: 4,
   },
+  muted: {
+    fontSize: 14,
+    color: C.textSecondary,
+    fontStyle: 'italic',
+  },
   conditionsList: {
-    marginTop: 10,
     gap: 6,
   },
   conditionRow: {
@@ -553,16 +627,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   probText: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '700',
   },
   row: {
     flexDirection: 'row',
-    paddingVertical: 4,
+    paddingVertical: 5,
     gap: 12,
   },
   rowLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: C.textSecondary,
     width: 110,
   },
@@ -582,13 +656,13 @@ const styles = StyleSheet.create({
     borderBottomColor: C.border,
   },
   qaQ: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: C.textPrimary,
     marginBottom: 2,
   },
   qaA: {
-    fontSize: 13,
+    fontSize: 14,
     color: C.textSecondary,
   },
   actionsCol: { gap: 10 },
@@ -621,7 +695,7 @@ const styles = StyleSheet.create({
     color: '#991b1b',
   },
   errorBody: {
-    fontSize: 13,
+    fontSize: 14,
     color: C.textSecondary,
     textAlign: 'center',
   },
