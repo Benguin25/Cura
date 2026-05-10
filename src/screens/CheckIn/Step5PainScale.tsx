@@ -1,4 +1,4 @@
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StepLayout } from './components/StepLayout';
 import { useCheckIn } from './CheckInContext';
 
@@ -15,41 +15,19 @@ export default function Step5PainScale() {
 
   return (
     <StepLayout onContinue={next} continueDisabled={!canContinue}>
-      <Text className="text-2xl font-bold text-slate-900 mt-2">
-        Rate your pain
-      </Text>
-      <Text className="text-sm text-slate-500 mt-1">
-        1 = barely noticeable · 10 = worst pain imaginable
-      </Text>
+      <Text style={styles.title}>Rate your pain</Text>
+      <Text style={styles.subtitle}>1 = barely noticeable · 10 = worst pain imaginable</Text>
 
-      <View
-        className="mt-6 flex-row flex-wrap justify-center"
-        style={{ gap: 12 }}
-      >
+      <View style={styles.grid}>
         {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
           const sel = data.painLevel === n;
           return (
             <Pressable
               key={n}
               onPress={() => update('painLevel', n)}
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: sel ? '#1D9E75' : '#f1f5f9',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: sel ? 0 : 1,
-                borderColor: '#e2e8f0',
-              }}
+              style={[styles.bubble, sel ? styles.bubbleActive : styles.bubbleInactive]}
             >
-              <Text
-                style={{
-                  color: sel ? '#ffffff' : '#334155',
-                  fontSize: 18,
-                  fontWeight: '700',
-                }}
-              >
+              <Text style={sel ? styles.bubbleTextActive : styles.bubbleTextInactive}>
                 {n}
               </Text>
             </Pressable>
@@ -57,18 +35,14 @@ export default function Step5PainScale() {
         })}
       </View>
 
-      <View className="items-center mt-5 min-h-7">
+      <View style={styles.labelWrap}>
         {data.painLevel != null && (
-          <Text className="text-base font-semibold text-slate-700">
-            {labelFor(data.painLevel)}
-          </Text>
+          <Text style={styles.severity}>{labelFor(data.painLevel)}</Text>
         )}
       </View>
 
-      <Text className="text-base font-semibold text-slate-800 mt-8 mb-2">
-        Do you have any allergies?
-      </Text>
-      <Text className="text-xs text-slate-500 mb-2">
+      <Text style={styles.allergyTitle}>Do you have any allergies?</Text>
+      <Text style={styles.allergyHelper}>
         Medications, foods, latex — anything we should know.
       </Text>
       <TextInput
@@ -76,8 +50,87 @@ export default function Step5PainScale() {
         onChangeText={(t) => update('allergies', t)}
         placeholder="e.g. penicillin, peanuts (or 'none')"
         placeholderTextColor="#94a3b8"
-        className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-base text-slate-900"
+        style={styles.input}
       />
     </StepLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginTop: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 4,
+  },
+  grid: {
+    marginTop: 24,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  bubble: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  bubbleActive: {
+    backgroundColor: '#1D9E75',
+    borderWidth: 0,
+  },
+  bubbleInactive: {
+    backgroundColor: '#f8fafc',
+  },
+  bubbleTextActive: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  bubbleTextInactive: {
+    color: '#0f172a',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  labelWrap: {
+    alignItems: 'center',
+    marginTop: 20,
+    minHeight: 28,
+  },
+  severity: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  allergyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0f172a',
+    marginTop: 32,
+    marginBottom: 8,
+  },
+  allergyHelper: {
+    fontSize: 12,
+    color: '#64748b',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#0f172a',
+  },
+});

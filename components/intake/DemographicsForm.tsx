@@ -8,6 +8,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -122,10 +123,8 @@ const INTERPRETER_OPTIONS: SelectOption[] = [
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <View style={{ marginTop: 24, marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingBottom: 8 }}>
-      <Text style={{ fontSize: 12, fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>
-        {title}
-      </Text>
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
     </View>
   );
 }
@@ -140,18 +139,18 @@ interface FieldWrapperProps {
 
 function FieldWrapper({ label, error, required, mismatch, children }: FieldWrapperProps) {
   return (
-    <View className="mb-4">
-      <Text className="text-sm font-medium text-gray-700 mb-1.5">
+    <View style={styles.field}>
+      <Text style={styles.label}>
         {label}
-        {required && <Text className="text-red-500"> *</Text>}
+        {required && <Text style={styles.required}> *</Text>}
       </Text>
       {children}
       {mismatch && (
-        <Text className="text-xs text-amber-600 mt-1">
+        <Text style={styles.mismatch}>
           This field was pre-filled from OHIP — your edit may affect card matching.
         </Text>
       )}
-      {error && <Text className="text-xs text-red-500 mt-1">{error}</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
@@ -171,64 +170,44 @@ function SelectField({ label, value, onChange, options, error, required, placeho
   const selectedLabel = options.find((o) => o.value === value)?.label;
 
   return (
-    <View className="mb-4">
-      <Text className="text-sm font-medium text-gray-700 mb-1.5">
+    <View style={styles.field}>
+      <Text style={styles.label}>
         {label}
-        {required && <Text className="text-red-500"> *</Text>}
+        {required && <Text style={styles.required}> *</Text>}
       </Text>
-      <TouchableOpacity
-        onPress={() => setOpen(true)}
-        style={{
-          borderWidth: 1,
-          borderColor: '#d1d5db',
-          borderRadius: 12,
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          backgroundColor: 'white',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Text style={{ color: selectedLabel ? '#111827' : '#9ca3af', fontSize: 16 }}>
+      <TouchableOpacity onPress={() => setOpen(true)} style={styles.select}>
+        <Text style={selectedLabel ? styles.selectValue : styles.selectPlaceholder}>
           {selectedLabel ?? placeholder}
         </Text>
-        <Text style={{ color: '#9ca3af', fontSize: 12 }}>▾</Text>
+        <Text style={styles.selectChevron}>▾</Text>
       </TouchableOpacity>
-      {error && <Text className="text-xs text-red-500 mt-1">{error}</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
 
       <Modal visible={open} transparent animationType="fade">
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
+          style={styles.modalBackdrop}
           activeOpacity={1}
           onPress={() => setOpen(false)}
         >
-          <View style={{ backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 36 }}>
-            <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
-              <Text style={{ fontSize: 16, fontWeight: '600', textAlign: 'center', color: '#111827' }}>
-                {label}
-              </Text>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{label}</Text>
             </View>
-            <ScrollView style={{ maxHeight: 360 }}>
-              {options.map((opt) => (
-                <TouchableOpacity
-                  key={opt.value}
-                  onPress={() => { onChange(opt.value); setOpen(false); }}
-                  style={{
-                    paddingHorizontal: 24,
-                    paddingVertical: 16,
-                    backgroundColor: value === opt.value ? '#eff6ff' : 'white',
-                  }}
-                >
-                  <Text style={{
-                    fontSize: 16,
-                    color: value === opt.value ? '#2563eb' : '#111827',
-                    fontWeight: value === opt.value ? '500' : '400',
-                  }}>
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <ScrollView style={styles.modalScroll}>
+              {options.map((opt) => {
+                const active = value === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() => { onChange(opt.value); setOpen(false); }}
+                    style={[styles.modalRow, active && styles.modalRowActive]}
+                  >
+                    <Text style={active ? styles.modalRowTextActive : styles.modalRowText}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         </TouchableOpacity>
@@ -405,20 +384,18 @@ export function DemographicsForm() {
       : null;
 
   return (
-    <ScrollView className="flex-1" contentContainerStyle={{ padding: 20, paddingBottom: 64 }}>
-      <Text className="text-2xl font-bold text-gray-900 mb-2">Personal Information</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.pageTitle}>Personal Information</Text>
 
       {hcvStatus === 'offline' && (
-        <View className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <Text className="text-amber-800 text-sm font-medium">Health card could not be verified.</Text>
-          <Text className="text-amber-700 text-sm mt-1">
-            Please ensure details match the physical card.
-          </Text>
+        <View style={styles.warningBanner}>
+          <Text style={styles.warningTitle}>Health card could not be verified.</Text>
+          <Text style={styles.warningBody}>Please ensure details match the physical card.</Text>
         </View>
       )}
       {hcvStatus === 'valid' && (
-        <View className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-          <Text className="text-green-800 text-sm">
+        <View style={styles.successBanner}>
+          <Text style={styles.successText}>
             Details pre-filled from OHIP. Review and correct if needed.
           </Text>
         </View>
@@ -427,13 +404,13 @@ export function DemographicsForm() {
       {/* ── OHIP & Coverage ── */}
       <SectionHeader title="OHIP & Coverage" />
 
-      <View className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-        <Text className="text-xs text-gray-500 mb-0.5">Health Card Number</Text>
-        <Text className="text-base font-semibold text-gray-900">
+      <View style={styles.cardSurface}>
+        <Text style={styles.cardCaption}>Health Card Number</Text>
+        <Text style={styles.cardValue}>
           {healthCardNumber.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3')}
           {versionCode ? `  ${versionCode}` : ''}
         </Text>
-        <Text className="text-xs text-green-600 mt-1">
+        <Text style={styles.cardStatus}>
           {hcvStatus === 'valid' ? '✓ Verified' : hcvStatus === 'offline' ? '⚠ Not verified' : ''}
         </Text>
       </View>
@@ -453,8 +430,8 @@ export function DemographicsForm() {
         )}
       />
       {provinceNote && (
-        <View className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <Text className="text-amber-800 text-sm">{provinceNote}</Text>
+        <View style={styles.noticeBanner}>
+          <Text style={styles.warningTitle}>{provinceNote}</Text>
         </View>
       )}
 
@@ -464,12 +441,12 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Card Expiry" error={errors.cardExpiry?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="YYYY-MM-DD (optional)"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -489,7 +466,7 @@ export function DemographicsForm() {
             mismatch={isMismatch('legalFirstName')}
           >
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -504,13 +481,13 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Legal Middle Name" error={errors.legalMiddleName?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               autoCapitalize="words"
               placeholder="Optional"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -526,7 +503,7 @@ export function DemographicsForm() {
             mismatch={isMismatch('legalLastName')}
           >
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -541,13 +518,13 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Preferred Name" error={errors.preferredName?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               autoCapitalize="words"
               placeholder="Optional — goes by"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -563,13 +540,13 @@ export function DemographicsForm() {
             mismatch={isMismatch('dateOfBirth')}
           >
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="YYYY-MM-DD"
               keyboardType="numeric"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -611,13 +588,13 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Phone" required error={errors.phone?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="(416) 555-0100"
               keyboardType="phone-pad"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -628,14 +605,14 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Email" error={errors.email?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="Optional"
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -646,12 +623,12 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Street Address" required error={errors.addressLine1?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="123 Main St"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -662,7 +639,7 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="City" required error={errors.city?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -690,13 +667,13 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Postal Code" required error={errors.postalCode?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={(t) => onChange(t.toUpperCase())}
               onBlur={onBlur}
               placeholder="M5V 2T6"
               autoCapitalize="characters"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -711,13 +688,13 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Full Name" error={errors.emergencyName?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="Optional"
               autoCapitalize="words"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -741,13 +718,13 @@ export function DemographicsForm() {
         render={({ field: { value, onChange, onBlur } }) => (
           <FieldWrapper label="Phone" error={errors.emergencyPhone?.message}>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3.5 text-base text-gray-900 bg-white"
+              style={styles.input}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="Optional"
               keyboardType="phone-pad"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94a3b8"
             />
           </FieldWrapper>
         )}
@@ -785,24 +762,218 @@ export function DemographicsForm() {
       />
 
       <TouchableOpacity
-        style={{
-          marginTop: 24,
-          paddingVertical: 16,
-          borderRadius: 12,
-          alignItems: 'center',
-          backgroundColor: submitting ? '#93c5fd' : '#2563eb',
-        }}
+        style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
         onPress={handleSubmit(onSubmit)}
         disabled={submitting}
       >
         {submitting ? (
-          <ActivityIndicator color="white" />
+          <ActivityIndicator color="#ffffff" />
         ) : (
-          <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
-            Confirm & Continue →
-          </Text>
+          <Text style={styles.submitBtnText}>Confirm & Continue →</Text>
         )}
       </TouchableOpacity>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 64,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  warningBanner: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 12,
+  },
+  warningTitle: {
+    color: '#92400e',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  warningBody: {
+    color: '#b45309',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  successBanner: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 12,
+  },
+  successText: {
+    color: '#15803d',
+    fontSize: 14,
+  },
+  noticeBanner: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 8,
+  },
+  sectionHeader: {
+    marginTop: 24,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingBottom: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+    textTransform: 'uppercase',
+  },
+  cardSurface: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  cardCaption: {
+    fontSize: 12,
+    color: '#64748b',
+    marginBottom: 2,
+  },
+  cardValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  cardStatus: {
+    fontSize: 12,
+    color: '#1D9E75',
+    marginTop: 4,
+  },
+  field: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#0f172a',
+    marginBottom: 6,
+  },
+  required: {
+    color: '#dc2626',
+  },
+  mismatch: {
+    fontSize: 12,
+    color: '#b45309',
+    marginTop: 4,
+  },
+  error: {
+    fontSize: 12,
+    color: '#dc2626',
+    marginTop: 4,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#0f172a',
+    backgroundColor: '#ffffff',
+  },
+  select: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  selectValue: {
+    color: '#0f172a',
+    fontSize: 16,
+  },
+  selectPlaceholder: {
+    color: '#94a3b8',
+    fontSize: 16,
+  },
+  selectChevron: {
+    color: '#64748b',
+    fontSize: 12,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 36,
+  },
+  modalHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#0f172a',
+  },
+  modalScroll: {
+    maxHeight: 360,
+  },
+  modalRow: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+  },
+  modalRowActive: {
+    backgroundColor: '#f0fdf4',
+  },
+  modalRowText: {
+    fontSize: 16,
+    color: '#0f172a',
+  },
+  modalRowTextActive: {
+    fontSize: 16,
+    color: '#1D9E75',
+    fontWeight: '500',
+  },
+  submitBtn: {
+    marginTop: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#1D9E75',
+  },
+  submitBtnDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  submitBtnText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import type { IntakeStep } from '../../store/intakeStore';
 
 const STEPS: { key: IntakeStep; label: string }[] = [
@@ -16,33 +16,30 @@ export function StepIndicator({ currentStep }: Props) {
   const currentIndex = STEPS.findIndex((s) => s.key === currentStep);
 
   return (
-    <View className="flex-row items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
+    <View style={styles.container}>
       {STEPS.map((step, idx) => {
         const isCompleted = idx < currentIndex;
         const isCurrent = idx === currentIndex;
+        const active = isCompleted || isCurrent;
 
         return (
           <React.Fragment key={step.key}>
-            <View className="items-center">
-              <View
-                className={`w-8 h-8 rounded-full items-center justify-center ${
-                  isCompleted || isCurrent ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
-              >
+            <View style={styles.stepCol}>
+              <View style={[styles.bubble, active ? styles.bubbleActive : styles.bubbleInactive]}>
                 {isCompleted ? (
-                  <Text className="text-white text-sm font-bold">✓</Text>
+                  <Text style={styles.bubbleTextActive}>✓</Text>
                 ) : (
-                  <Text className={`text-sm font-bold ${isCurrent ? 'text-white' : 'text-gray-400'}`}>
+                  <Text style={isCurrent ? styles.bubbleTextActive : styles.bubbleTextInactive}>
                     {idx + 1}
                   </Text>
                 )}
               </View>
-              <Text className={`text-xs mt-1 ${isCurrent ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>
+              <Text style={isCurrent ? styles.labelActive : styles.labelInactive}>
                 {step.label}
               </Text>
             </View>
             {idx < STEPS.length - 1 && (
-              <View className={`flex-1 h-0.5 mx-2 mb-4 ${isCompleted ? 'bg-blue-600' : 'bg-gray-200'}`} />
+              <View style={[styles.connector, isCompleted ? styles.connectorActive : styles.connectorInactive]} />
             )}
           </React.Fragment>
         );
@@ -50,3 +47,65 @@ export function StepIndicator({ currentStep }: Props) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  stepCol: {
+    alignItems: 'center',
+  },
+  bubble: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bubbleActive: {
+    backgroundColor: '#1D9E75',
+  },
+  bubbleInactive: {
+    backgroundColor: '#e2e8f0',
+  },
+  bubbleTextActive: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  bubbleTextInactive: {
+    color: '#64748b',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  labelActive: {
+    fontSize: 12,
+    marginTop: 4,
+    color: '#1D9E75',
+    fontWeight: '500',
+  },
+  labelInactive: {
+    fontSize: 12,
+    marginTop: 4,
+    color: '#64748b',
+  },
+  connector: {
+    flex: 1,
+    height: 2,
+    marginHorizontal: 8,
+    marginBottom: 16,
+  },
+  connectorActive: {
+    backgroundColor: '#1D9E75',
+  },
+  connectorInactive: {
+    backgroundColor: '#e2e8f0',
+  },
+});

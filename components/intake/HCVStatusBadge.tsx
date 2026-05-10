@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import type { HCVStatus } from '../../store/intakeStore';
 
 const REJECTION_REASONS: Record<string, string> = {
@@ -18,18 +18,18 @@ export function HCVStatusBadge({ status, responseCode }: Props) {
 
   if (status === 'pending') {
     return (
-      <View className="flex-row items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
-        <ActivityIndicator size="small" color="#6b7280" />
-        <Text className="text-sm text-gray-600">Validating...</Text>
+      <View style={[styles.row, styles.pendingBg]}>
+        <ActivityIndicator size="small" color="#64748b" />
+        <Text style={styles.pendingText}>Validating...</Text>
       </View>
     );
   }
 
   if (status === 'valid') {
     return (
-      <View className="flex-row items-center gap-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200">
-        <Text className="text-green-600 font-bold">✓</Text>
-        <Text className="text-sm text-green-700 font-medium">Card verified</Text>
+      <View style={[styles.row, styles.successBg]}>
+        <Text style={styles.successIcon}>✓</Text>
+        <Text style={styles.successText}>Card verified</Text>
       </View>
     );
   }
@@ -39,21 +39,78 @@ export function HCVStatusBadge({ status, responseCode }: Props) {
       ? (REJECTION_REASONS[responseCode] ?? `Rejected (code ${responseCode})`)
       : 'Card validation failed';
     return (
-      <View className="flex-row items-center gap-2 px-3 py-2 bg-red-50 rounded-lg border border-red-200">
-        <Text className="text-red-500 font-bold">✗</Text>
-        <Text className="text-sm text-red-700">{reason}</Text>
+      <View style={[styles.row, styles.errorBg]}>
+        <Text style={styles.errorIcon}>✗</Text>
+        <Text style={styles.errorText}>{reason}</Text>
       </View>
     );
   }
 
   if (status === 'offline') {
     return (
-      <View className="flex-row items-center gap-2 px-3 py-2 bg-amber-50 rounded-lg border border-amber-200">
-        <Text className="text-amber-600 font-bold">⚠</Text>
-        <Text className="text-sm text-amber-700">Validation offline</Text>
+      <View style={[styles.row, styles.warningBg]}>
+        <Text style={styles.warningIcon}>⚠</Text>
+        <Text style={styles.warningText}>Validation offline</Text>
       </View>
     );
   }
 
   return null;
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  pendingBg: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  pendingText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  successBg: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#bbf7d0',
+  },
+  successIcon: {
+    color: '#16a34a',
+    fontWeight: '700',
+  },
+  successText: {
+    fontSize: 14,
+    color: '#15803d',
+    fontWeight: '500',
+  },
+  errorBg: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#fecaca',
+  },
+  errorIcon: {
+    color: '#dc2626',
+    fontWeight: '700',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#b91c1c',
+  },
+  warningBg: {
+    backgroundColor: '#fef3c7',
+    borderColor: '#fde68a',
+  },
+  warningIcon: {
+    color: '#d97706',
+    fontWeight: '700',
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#b45309',
+  },
+});

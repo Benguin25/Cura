@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { StepLayout } from './components/StepLayout';
 import { BodySilhouette } from './components/BodySilhouette';
 import { useCheckIn, BodyRegion, REGION_LABEL } from './CheckInContext';
@@ -18,53 +18,31 @@ export default function Step2BodyMap() {
 
   return (
     <StepLayout onContinue={next}>
-      <Text className="text-2xl font-bold text-slate-900 mt-2">
-        Tap where you feel pain or discomfort
-      </Text>
-      <Text className="text-sm text-slate-500 mt-1">
-        Select all areas that apply. You can skip this step if no specific area
-        is affected.
+      <Text style={styles.title}>Tap where you feel pain or discomfort</Text>
+      <Text style={styles.subtitle}>
+        Select all areas that apply. You can skip this step if no specific area is affected.
       </Text>
 
-      <View className="flex-row bg-slate-100 rounded-full p-1 my-5 self-center">
+      <View style={styles.toggleWrap}>
         <Pressable
           onPress={() => setView('front')}
-          className={`px-8 py-2 rounded-full ${
-            view === 'front' ? 'bg-white' : ''
-          }`}
+          style={[styles.tab, view === 'front' && styles.tabActive]}
         >
-          <Text
-            className={
-              view === 'front'
-                ? 'font-semibold text-slate-900'
-                : 'text-slate-500'
-            }
-          >
+          <Text style={view === 'front' ? styles.tabTextActive : styles.tabText}>
             Front
           </Text>
         </Pressable>
         <Pressable
           onPress={() => setView('back')}
-          className={`px-8 py-2 rounded-full ${
-            view === 'back' ? 'bg-white' : ''
-          }`}
+          style={[styles.tab, view === 'back' && styles.tabActive]}
         >
-          <Text
-            className={
-              view === 'back'
-                ? 'font-semibold text-slate-900'
-                : 'text-slate-500'
-            }
-          >
+          <Text style={view === 'back' ? styles.tabTextActive : styles.tabText}>
             Back
           </Text>
         </Pressable>
       </View>
 
-      <View
-        style={{ width: '100%', aspectRatio: 200 / 440 }}
-        className="items-center self-center"
-      >
+      <View style={styles.bodyWrap}>
         <BodySilhouette
           view={view}
           selected={data.bodyRegions}
@@ -73,19 +51,12 @@ export default function Step2BodyMap() {
       </View>
 
       {data.bodyRegions.length > 0 && (
-        <View className="mt-4">
-          <Text className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-            Selected
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
+        <View style={styles.selectedWrap}>
+          <Text style={styles.selectedLabel}>Selected</Text>
+          <View style={styles.chipRow}>
             {data.bodyRegions.map((r) => (
-              <View
-                key={r}
-                className="bg-[#1D9E75]/10 border border-[#1D9E75] rounded-full px-3 py-1"
-              >
-                <Text className="text-[#1D9E75] text-sm font-medium">
-                  {REGION_LABEL[r]}
-                </Text>
+              <View key={r} style={styles.chip}>
+                <Text style={styles.chipText}>{REGION_LABEL[r]}</Text>
               </View>
             ))}
           </View>
@@ -94,3 +65,75 @@ export default function Step2BodyMap() {
     </StepLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginTop: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 4,
+  },
+  toggleWrap: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    borderRadius: 9999,
+    padding: 4,
+    marginVertical: 20,
+    alignSelf: 'center',
+  },
+  tab: {
+    paddingHorizontal: 32,
+    paddingVertical: 8,
+    borderRadius: 9999,
+  },
+  tabActive: {
+    backgroundColor: '#ffffff',
+  },
+  tabText: {
+    color: '#64748b',
+  },
+  tabTextActive: {
+    color: '#0f172a',
+    fontWeight: '600',
+  },
+  bodyWrap: {
+    width: '100%',
+    aspectRatio: 200 / 440,
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  selectedWrap: {
+    marginTop: 16,
+  },
+  selectedLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#1D9E75',
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  chipText: {
+    color: '#1D9E75',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
