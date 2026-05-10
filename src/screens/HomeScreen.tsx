@@ -10,7 +10,7 @@ export default function HomeScreen({ navigation }: Props) {
     <SafeAreaView className="flex-1 bg-slate-50">
       <View className="flex-1 px-6 justify-between py-10">
         <View className="items-center mt-12">
-          <View className="w-20 h-20 rounded-2xl bg-brand items-center justify-center mb-6 shadow-md">
+          <View className="w-20 h-20 rounded-2xl bg-[#1D9E75] items-center justify-center mb-6 shadow-md">
             <Text className="text-white text-5xl font-bold leading-none">+</Text>
           </View>
           <Text className="text-4xl font-bold text-slate-900 tracking-tight">
@@ -27,13 +27,13 @@ export default function HomeScreen({ navigation }: Props) {
           </Text>
 
           <Pressable
-            onPress={() => navigation.navigate('Intake')}
-            className="bg-brand active:bg-brand-dark rounded-2xl px-5 py-5 shadow-sm"
+            onPress={() => navigation.navigate('CheckIn')}
+            className="bg-[#1D9E75] active:bg-[#188660] rounded-2xl px-5 py-5 shadow-sm"
           >
             <Text className="text-white text-lg font-semibold">
               Type in my information
             </Text>
-            <Text className="text-red-100 text-sm mt-1">
+            <Text className="text-emerald-50 text-sm mt-1">
               Fill out a short intake form
             </Text>
           </Pressable>
